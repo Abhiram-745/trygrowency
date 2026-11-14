@@ -2,24 +2,30 @@
 // All phase boundaries live here so timing can be tuned in one place.
 
 /** How long the hero stays pinned, in viewport heights of scrolling. */
-export const PIN_LENGTH_VH = 8.5;
+export const PIN_LENGTH_VH = 9.5;
 
 export const T = {
-  // 1. Let the reflection pass before the headline breaks up.
-  typeStart: 0.12,
-  typeEnd: 0.38,
+  // 1. Plain black wordmark erodes completely before the tagline appears.
+  typeStart: 0.02,
+  typeEnd: 0.20,
+  taglineStart: 0.22,
+  taglineEnd: 0.34,
+  clickStart: 0.395,
+  clickEnd: 0.42,
+  erodeStart: 0.425,
+  erodeEnd: 0.50,
   // 2/3. Orbit accelerates, tilts and opens once the type starts clearing…
-  orbitStart: 0.16,
-  orbitEnd: 0.44,
+  orbitStart: 0.40,
+  orbitEnd: 0.54,
   // …and the cards fly out into the mark's three facets.
-  flyStart: 0.34,
-  flyEnd: 0.61,
+  flyStart: 0.45,
+  flyEnd: 0.68,
   // 3b. Briefly hold the assembled video-filled mark.
-  chromeStart: 0.66,
+  chromeStart: 0.71,
   // 4. Chrome reveal and rotation.
-  chromeEnd: 0.82,
+  chromeEnd: 0.86,
   // 5. Push into a metallic facet until it fills the viewport.
-  zoomStart: 0.85,
+  zoomStart: 0.89,
   zoomEnd: 1.0,
 };
 

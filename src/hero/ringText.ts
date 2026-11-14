@@ -1,11 +1,6 @@
-// Tagline that sits inside the orbit, like the planet in Saturn's rings.
-//
-// The text is rendered once into a signed-distance field, so its weight can be
-// changed per pixel in the shader: letters swell bolder around the cursor (or
-// finger) and relax when it leaves; with nobody interacting, a slow weight
-// wave rolls through the line. It sits on a camera-facing plane at the ring
-// centre with a protected foreground layer. A scroll-driven silver sweep
-// is followed by edge-first erosion and drifting metallic fragments.
+// Fixed-weight tagline with a scroll-controlled liquid-silver light reveal.
+// It waits for the wordmark to clear, holds for reading, then makes a short
+// mechanical snap before its edges dissolve into silver fragments.
 import * as THREE from 'three';
 import { TEXT_METAL } from './textMetal';
 
@@ -16,31 +11,29 @@ const FONT_PX = 120;
 const SPREAD = 18 * SS; // SDF range in texture px
 
 const vertexShader = /* glsl */ `
-uniform float uReveal;
+uniform float uReveal, uClick;
 varying vec2 vUv;
 void main() {
   vUv = uv;
   vec3 p = position;
-  p.y -= (1.0 - uReveal) * 0.05;
+  p.xy *= 1.0 - uClick * 0.025;
+  p.x += (uv.y > 0.5 ? -1.0 : 1.0) * uClick * 0.006;
+  p.y -= (1.0 - uReveal) * 0.025;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
 
 const fragmentShader = /* glsl */ `
 uniform sampler2D map;
-uniform float uReveal, uOpacity, uTime, uAspect, uPtrStr, uThin, uBold, uMetal, uErode;
+uniform float uReveal, uOpacity, uErode;
+uniform vec2 uTexel;
 ${TEXT_METAL}
 float grain(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-uniform vec2 uPtr;
 varying vec2 vUv;
 void main() {
   float sd = (texture2D(map, vUv).r - 0.5) * 2.0; // -1..1 of SPREAD, + inside
 
-  // weight field: swell around the pointer, idle wave when untouched
-  vec2 d = (vUv - uPtr) * vec2(uAspect, 1.0);
-  float near = exp(-dot(d, d) / 0.11) * uPtrStr;
-  float wave = smoothstep(0.55, 1.0, 0.5 + 0.5 * sin(vUv.x * 5.0 - vUv.y * 1.5 - uTime * 1.25)) * (1.0 - uPtrStr) * 0.55;
-  float w = clamp(near + wave, 0.0, 1.0);
-  float edge = sd + mix(uThin, uBold, w);
+  // Fixed 500-weight silhouette, independent of time and pointer position.
+  float edge = sd;
   float aa = max(fwidth(edge), 1e-4) * 0.75;
   float ink = smoothstep(-aa, aa, edge);
 
@@ -56,7 +49,11 @@ void main() {
   float keep = smoothstep(uErode - 0.015, uErode + 0.015, threshold);
   float a = ink * m * uOpacity * keep;
   if (a < 0.003) discard;
-  gl_FragColor = vec4(metalInk(vec2(vUv.x, 1.0 - vUv.y), uMetal, vec3(0.067, 0.067, 0.078)), a);
+  vec2 gradient = vec2(
+    texture2D(map, vUv + vec2(uTexel.x, 0.0)).r - texture2D(map, vUv - vec2(uTexel.x, 0.0)).r,
+    texture2D(map, vUv + vec2(0.0, uTexel.y)).r - texture2D(map, vUv - vec2(0.0, uTexel.y)).r
+  );
+  gl_FragColor = vec4(liquidMetal(vec2(vUv.x, 1.0 - vUv.y), uReveal, sd, gradient), a);
 }`;
 
 export class RingText {
@@ -64,19 +61,14 @@ export class RingText {
   private u = {
     map: { value: null as THREE.Texture | null },
     uReveal: { value: 0 },
-    uMetal: { value: 0 },
+    uClick: { value: 0 },
+    uTexel: { value: new THREE.Vector2() },
     uErode: { value: 0 },
     uOpacity: { value: 1 },
-    uTime: { value: 0 },
-    uAspect: { value: 3 },
-    uPtr: { value: new THREE.Vector2(0.5, -1) },
-    uPtrStr: { value: 0 },
-    uThin: { value: 0 },
-    uBold: { value: 0 },
+
   };
   private dust?: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private aspect = 3;
-  private ptrStr = 0;
 
   constructor() {
     this.mesh = new THREE.Mesh(
@@ -189,10 +181,7 @@ export class RingText {
     this.u.map.value?.dispose();
     this.u.map.value = tex;
     this.aspect = W / H;
-    this.u.uAspect.value = this.aspect;
-    // Weight range, in SDF units (fraction of SPREAD): thinner at rest, bold near the pointer.
-    this.u.uThin.value = -(1.6 * SS) / SPREAD;
-    this.u.uBold.value = (5.5 * SS) / SPREAD;
+    this.u.uTexel.value.set(1 / W, 1 / H);
   }
 
   /** Place at the ring centre, `width` world units wide, facing the camera. */
@@ -201,18 +190,11 @@ export class RingText {
     this.mesh.scale.set(width, width / this.aspect, 1);
   }
 
-  /** @param ptr pointer in the plane's uv space, or null when not over it */
-  update(reveal: number, opacity: number, time: number, dt: number, ptr: THREE.Vector2 | null, metal: number, erode: number) {
-    const u = this.u;
-    u.uMetal.value = metal;
-    u.uErode.value = erode;
-    u.uReveal.value = reveal;
-    u.uOpacity.value = opacity;
-    u.uTime.value = time;
-    const target = ptr ? 1 : 0;
-    this.ptrStr += (target - this.ptrStr) * (1 - Math.exp(-dt * (target ? 6 : 2.2)));
-    u.uPtrStr.value = this.ptrStr;
-    if (ptr) u.uPtr.value.lerp(ptr, 1 - Math.exp(-dt * 12));
+  update(reveal: number, opacity: number, erode: number, click: number) {
+    this.u.uReveal.value = reveal;
+    this.u.uOpacity.value = opacity;
+    this.u.uErode.value = erode;
+    this.u.uClick.value = click;
     this.mesh.visible = opacity > 0.002 && reveal > 0.001;
   }
 }

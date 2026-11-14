@@ -10,7 +10,7 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const fontPath = path.join(root, 'node_modules/geist/dist/fonts/geist-sans/Geist-Bold.ttf');
 const font = opentype.parse(fs.readFileSync(fontPath).buffer);
 
-const TEXT = 'trygrowency';
+const TEXT = 'growency';
 const SIZE = 1000; // design units (1 em)
 const TRACKING = -38; // global tightening, in units per em
 // Optical pair adjustments (units per em), applied after kerning + tracking.

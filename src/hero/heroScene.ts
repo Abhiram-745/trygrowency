@@ -10,7 +10,7 @@ import { ChromeMark } from './chromeMark';
 import { PosterLoader, VideoPool } from './media';
 import { RingText } from './ringText';
 import { assignTiles, type Tile } from './tiles';
-import { clamp01, easeInOut, easeOut, lerp, phases, seg, smooth, type Phases } from './timeline';
+import { clamp01, easeInOut, easeOut, lerp, T, phases, seg, smooth, type Phases } from './timeline';
 import { WordmarkFx } from './wordmarkFx';
 
 const FOV = 30;
@@ -381,13 +381,11 @@ export class HeroScene {
 
     this.updateLogo(ph);
     this.updateCards(ph, intro, dt);
-    let tagPtr: THREE.Vector2 | null = null;
-    if (this.pointerIn && this.p < 0.32 && this.tagline.mesh.visible) {
-      this.raycaster.setFromCamera(this.ndc, this.camera);
-      tagPtr = this.raycaster.intersectObject(this.tagline.mesh, false)[0]?.uv ?? null;
-    }
-    this.tagline.update(seg(this.p, 0.03, 0.21), 1 - smooth(seg(this.p, 0.34, 0.42)), this.time, dt, tagPtr, seg(this.p, 0.03, 0.21), seg(this.p, 0.21, 0.40));
-    this.word.update(ph.type, seg(this.p, 0.01, 0.15));
+    const reveal = seg(this.p, T.taglineStart, T.taglineEnd);
+    const click = smooth(seg(this.p, T.clickStart, T.clickStart + 0.008))
+      * (1 - smooth(seg(this.p, T.clickStart + 0.008, T.clickEnd)));
+    this.tagline.update(reveal, 1 - smooth(seg(this.p, 0.49, 0.515)), seg(this.p, T.erodeStart, T.erodeEnd), click);
+    this.word.update(ph.type);
     this.updateUi(ph);
 
     if (now - this.videoTick > 250) {
@@ -406,7 +404,7 @@ export class HeroScene {
     const zoom = easeInOut(ph.zoom);
     // Rotation starts with the first metallic reflection and settles before
     // the final push, so the camera travels into a broad face of silver.
-    const turn = smooth(seg(this.p, 0.66, 0.85));
+    const turn = smooth(seg(this.p, T.chromeStart, T.zoomStart));
     const tilt = Math.sin(turn * Math.PI);
     const scale = logoH * Math.exp(zoom * Math.log(75));
     this.logo.rotation.set(

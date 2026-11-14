@@ -3,11 +3,11 @@
 Vite + TypeScript site. The homepage hero is a scroll-scrubbed WebGL sequence
 (three.js + GSAP ScrollTrigger):
 
-1. **Opening:** campaign cards drift in a raised, draggable orbit below the wordmark. The tagline stays hidden until scrolling begins, then appears in the clear centre in front of the cards.
-2. **Metallic type:** scrolling sends a silver reflection across the wordmark and tagline, then erodes the letters into drifting fragments. Scrolling back rebuilds them.
-3. **Orbit → mark:** the cards accelerate and assemble into the three facets of the mark, playing up to three clips.
+1. **Opening:** the plain black **growency** wordmark sits above a raised, draggable orbit of campaign cards. The tagline is hidden.
+2. **Clear the stage:** the wordmark erodes completely before the tagline appears. A liquid-silver lighting reveal travels across its fixed-weight letters; there is no idle or cursor-driven weight animation.
+3. **Snap and dissolve:** the tagline holds for reading, makes a brief mechanical snap, then breaks into silver fragments as the carousel opens and assembles into the logo.
 4. **Chrome rotation:** a reflection replaces the footage with bevelled chrome as the mark rotates through a full turn. It stays metallic.
-5. **Immersive finish:** the final scroll pushes into the middle facet until silver fills the viewport. The sequence spans 8.5 viewport heights; there are no sections below it.
+5. **Immersive finish:** the final scroll pushes into the middle facet until silver fills the viewport. The sequence spans 9.5 viewport heights; there are no sections below it.
 
 ```bash
 npm install
@@ -31,7 +31,7 @@ clips should be muted 4:5 H.264 MP4 loops. The current files are generated stand
 - `scripts/build-wordmark.mjs` → `src/brand/wordmark.generated.ts`: Geist Bold outlines, hand-tuned tracking,
   and a redrawn final "y" whose descender is cut at the mark's lower-edge angle. Re-run `npm run gen:wordmark` after tuning.
 - `src/hero/timeline.ts`: every phase boundary and the pin length.
-- `src/hero/ringText.ts`: the tagline shown inside the orbit.
+- `src/hero/ringText.ts`: the fixed-weight tagline, liquid-metal lighting reveal and snap-to-fragments exit.
 
 ## Accessibility & performance
 

@@ -1,4 +1,4 @@
-// Scroll-driven disintegration of the "trygrowency" wordmark.
+// Scroll-driven disintegration of the "growency" wordmark.
 //
 // The wordmark is rasterised once per layout into a mask texture. Every pixel
 // gets an erosion threshold: letters start in order from the left, and within
@@ -8,7 +8,6 @@
 // before fading. Everything is a pure function of progress, so scrolling back
 // rebuilds the type exactly.
 import * as THREE from 'three';
-import { TEXT_METAL } from './textMetal';
 import { WORDMARK_LETTERS, WORDMARK_VIEWBOX } from '../brand/wordmark.generated';
 
 const INK = [17 / 255, 17 / 255, 20 / 255];
@@ -33,7 +32,6 @@ export class WordmarkFx {
   private maskTex?: THREE.DataTexture;
   private uniforms = {
     uP: { value: 0 },
-    uMetal: { value: 0 },
     uLife: { value: LIFE },
     uDpr: { value: 1 },
     uTarget: { value: new THREE.Vector2() },
@@ -158,15 +156,14 @@ export class WordmarkFx {
         varying vec2 vUv;
         void main() { vUv = vec2(uv.x, 1.0 - uv.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: /* glsl */ `
-        uniform sampler2D uMask; uniform float uP, uMetal; uniform vec3 uInk;
-        ${TEXT_METAL}
+        uniform sampler2D uMask; uniform float uP; uniform vec3 uInk;
         varying vec2 vUv;
         void main() {
           vec2 m = texture2D(uMask, vUv).rg;
           float keep = smoothstep(uP - 0.0035, uP + 0.0035, m.g);
           float a = m.r * keep;
           if (a < 0.003) discard;
-          gl_FragColor = vec4(metalInk(vUv, uMetal, uInk), a);
+          gl_FragColor = vec4(uInk, a);
         }`,
     });
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(rect.w, rect.h), quadMat);
@@ -236,8 +233,7 @@ export class WordmarkFx {
     this.uniforms.uTarget.value.set(x, -y);
   }
 
-  update(typeProgress: number, metalProgress: number) {
-    this.uniforms.uMetal.value = metalProgress;
+  update(typeProgress: number) {
     this.uniforms.uP.value = typeProgress;
     this.group.visible = typeProgress < 0.999;
   }
