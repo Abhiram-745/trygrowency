@@ -12,20 +12,6 @@ const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
 // Nav icon
 fillMarkIcon($<SVGSVGElement>('[data-mark-icon]'));
 
-// Work grid (same asset list as the hero)
-const grid = $<HTMLUListElement>('[data-work-grid]');
-grid.innerHTML = CAMPAIGNS.slice(0, 8)
-  .map(
-    (c) => `<li class="work__card">
-      <div class="work__media">
-        <img src="${c.poster}" alt="${c.alt.replace(/"/g, '&quot;')}" loading="lazy" decoding="async" width="800" height="1000" />
-        ${c.placeholder ? '<span class="work__badge">Placeholder</span>' : ''}
-      </div>
-      <div class="work__meta"><span>${c.title}</span><span>${c.client}</span></div>
-    </li>`,
-  )
-  .join('');
-
 // Static mark is always built: it's the reduced-motion / no-WebGL layout.
 buildStaticMark($<SVGSVGElement>('[data-static-mark]'), CAMPAIGNS);
 

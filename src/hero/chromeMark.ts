@@ -1,7 +1,6 @@
 // The solid Growency mark: three extruded, bevelled facets. It is revealed
-// behind the reflection sweep as chrome, then eases into a flat white mark
-// with a faint resting edge. A soft silver-grey halo blooms from behind all
-// three facets on hover / focus / tap.
+// behind a reflection sweep and stays metallic through the final zoom.
+// A soft silver-grey halo blooms on hover / focus / tap.
 import * as THREE from 'three';
 import { MARK_ASPECT, MARK_FACETS_UNIT } from '../brand/mark';
 import { NOISE, SWEEP } from './glsl';
@@ -113,7 +112,8 @@ export class ChromeMark {
     this.u.uHover.value = hover;
     this.root.visible = sweep > -0.15;
     this.group.scale.z = Math.max(0.02, depth);
-    const h = hover * white;
+    const h = hover * 0.35;
+    this.material.roughness = 0.055 - hover * 0.02;
     this.halo.visible = h > 0.001;
     this.halo.material.opacity = h;
     const s = 1 + 0.06 * h;

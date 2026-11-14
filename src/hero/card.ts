@@ -27,7 +27,7 @@ ${SWEEP}
 ${SD_POLY}
 uniform sampler2D map;
 uniform float uHasMap, uTexAspect, uPlaneAspect, uRadius;
-uniform float uFront, uClip, uSweep, uOpacity;
+uniform float uFront, uClip, uSweep, uChrome, uOpacity;
 uniform float uPlay, uHov, uTime;
 uniform vec2 uPtr, uBlobC;
 uniform vec3 uFallback;
@@ -126,7 +126,9 @@ void main() {
   float d = sdPoly(vMark) - open * open * 3.0;
   float aa = max(fwidth(d), 1e-4);
   float facetMask = 1.0 - smoothstep(-aa, aa, d);
-  float a = mix(cardMask, 1.0, smoothstep(0.75, 1.0, uClip)) * facetMask;
+  // Orbit cards must remain whole: facet-space bounds only become relevant
+  // as they arrive at the assembled logo.
+  float a = mix(cardMask, facetMask, uClip);
 
   // depth clarity: back of the orbit fades toward the white page
   col = mix(vec3(1.0), col, mix(0.36, 1.0, uFront));
@@ -135,9 +137,11 @@ void main() {
   float s = sweepCoord(vMark) + (vnoise(vMark * 38.0) - 0.5) * 0.05 + (vnoise(vMark * 9.0) - 0.5) * 0.04;
   float keep = smoothstep(uSweep - 0.012, uSweep + 0.012, s);
   float sheen = exp(-pow((s - uSweep - 0.02) / 0.035, 2.0));
-  col = mix(col, vec3(0.94, 0.95, 0.965), clamp(sheen, 0.0, 1.0) * 0.85);
+  col = mix(col, vec3(0.94, 0.95, 0.965), clamp(sheen, 0.0, 1.0) * 0.85 * uChrome);
 
-  a *= keep * uOpacity;
+  // Before assembly, orbit coordinates extend outside the mark. Applying
+  // its reflection mask there would erase whole cards on the left.
+  a *= mix(1.0, keep, uChrome) * uOpacity;
   if (a < 0.004) discard;
   gl_FragColor = vec4(col, a);
 }`;
@@ -161,6 +165,7 @@ export class Card {
       uFront: { value: 1 },
       uClip: { value: 0 },
       uSweep: { value: -1 },
+      uChrome: { value: 0 },
       uOpacity: { value: 1 },
       uFallback: { value: new THREE.Vector3(0.93, 0.935, 0.945) },
       uLogoInv: { value: new THREE.Matrix4() },

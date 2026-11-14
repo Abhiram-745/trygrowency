@@ -4,9 +4,10 @@
 // changed per pixel in the shader: letters swell bolder around the cursor (or
 // finger) and relax when it leaves; with nobody interacting, a slow weight
 // wave rolls through the line. It sits on a camera-facing plane at the ring
-// centre, so back cards pass behind it and front cards in front. It wipes in
-// as the carousel arrives and clears as soon as scrolling starts.
+// centre with a protected foreground layer. A scroll-driven silver sweep
+// is followed by edge-first erosion and drifting metallic fragments.
 import * as THREE from 'three';
+import { TEXT_METAL } from './textMetal';
 
 export const TAGLINE = ['The only growth agency', 'you’ll ever need.'];
 
@@ -26,7 +27,9 @@ void main() {
 
 const fragmentShader = /* glsl */ `
 uniform sampler2D map;
-uniform float uReveal, uOpacity, uTime, uAspect, uPtrStr, uThin, uBold;
+uniform float uReveal, uOpacity, uTime, uAspect, uPtrStr, uThin, uBold, uMetal, uErode;
+${TEXT_METAL}
+float grain(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 uniform vec2 uPtr;
 varying vec2 vUv;
 void main() {
@@ -41,14 +44,19 @@ void main() {
   float aa = max(fwidth(edge), 1e-4) * 0.75;
   float ink = smoothstep(-aa, aa, edge);
 
-  // reveal: soft wipe, line by line
-  float line = vUv.y > 0.5 ? 0.0 : 0.22;
-  float r = uReveal * 1.3 - 0.2;
-  float m = smoothstep(r, r - 0.16, vUv.x * 0.7 + line);
+  // No ink at rest: the reflection itself reveals the letters on scroll.
+  float front = mix(-0.18, 1.22, uReveal);
+  float coord = vUv.x + (1.0 - vUv.y) * 0.06;
+  float m = 1.0 - smoothstep(front - 0.02, front + 0.025, coord);
 
-  float a = ink * m * uOpacity;
+  // Left-to-right, edge-first erosion, with fine silver grit at the boundary.
+  float letter = floor(vUv.x * 26.0) / 26.0;
+  float noise = grain(floor(vUv * vec2(780.0, 180.0)));
+  float threshold = 0.08 + letter * 0.46 + clamp(sd, 0.0, 1.0) * 0.30 + noise * 0.12;
+  float keep = smoothstep(uErode - 0.015, uErode + 0.015, threshold);
+  float a = ink * m * uOpacity * keep;
   if (a < 0.003) discard;
-  gl_FragColor = vec4(vec3(0.067, 0.067, 0.078), a);
+  gl_FragColor = vec4(metalInk(vec2(vUv.x, 1.0 - vUv.y), uMetal, vec3(0.067, 0.067, 0.078)), a);
 }`;
 
 export class RingText {
@@ -56,6 +64,8 @@ export class RingText {
   private u = {
     map: { value: null as THREE.Texture | null },
     uReveal: { value: 0 },
+    uMetal: { value: 0 },
+    uErode: { value: 0 },
     uOpacity: { value: 1 },
     uTime: { value: 0 },
     uAspect: { value: 3 },
@@ -64,14 +74,16 @@ export class RingText {
     uThin: { value: 0 },
     uBold: { value: 0 },
   };
+  private dust?: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private aspect = 3;
   private ptrStr = 0;
 
   constructor() {
     this.mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(1, 1),
-      new THREE.ShaderMaterial({ uniforms: this.u, vertexShader, fragmentShader, transparent: true, depthWrite: false }),
+      new THREE.ShaderMaterial({ uniforms: this.u, vertexShader, fragmentShader, transparent: true, depthTest: false, depthWrite: false }),
     );
+    this.mesh.renderOrder = 20;
     this.draw();
   }
 
@@ -109,6 +121,62 @@ export class RingText {
       const sd = inside[i] ? dIn[i] / 3 - 0.5 : -(dOut[i] / 3 - 0.5);
       out[i] = Math.max(0, Math.min(255, Math.round((sd / SPREAD) * 127.5 + 127.5)));
     }
+    // Sample the same distance field for fragments, so they lift directly
+    // from each letter as its erosion threshold passes, in either direction.
+    if (this.dust) {
+      this.mesh.remove(this.dust);
+      this.dust.geometry.dispose();
+      this.dust.material.dispose();
+    }
+    const positions: number[] = [];
+    const thresholds: number[] = [];
+    const seeds: number[] = [];
+    for (let y = 0; y < H; y += 5) {
+      for (let x = 0; x < W; x += 5) {
+        const i = y * W + x;
+        if (!inside[i]) continue;
+        const rand = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+        const n = rand - Math.floor(rand);
+        const sd = Math.max(0, (out[i] / 255 - 0.5) * 2);
+        positions.push(x / W - 0.5, 0.5 - y / H, 0.002);
+        thresholds.push(0.08 + Math.floor(x / W * 26) / 26 * 0.46 + sd * 0.30 + n * 0.12);
+        seeds.push(n);
+      }
+    }
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    dustGeo.setAttribute('aThreshold', new THREE.Float32BufferAttribute(thresholds, 1));
+    dustGeo.setAttribute('aSeed', new THREE.Float32BufferAttribute(seeds, 1));
+    this.dust = new THREE.Points(dustGeo, new THREE.ShaderMaterial({
+      uniforms: { ...this.u, uDpr: { value: Math.min(devicePixelRatio, 2) } },
+      transparent: true, depthTest: false, depthWrite: false,
+      vertexShader: /* glsl */ `
+        attribute float aThreshold, aSeed;
+        uniform float uErode, uDpr;
+        varying float vAlpha, vSeed;
+        void main() {
+          float age = (uErode - aThreshold) / 0.22;
+          vAlpha = step(0.0, age) * (1.0 - smoothstep(0.0, 1.0, age));
+          vSeed = aSeed;
+          vec3 p = position;
+          float drift = clamp(age, 0.0, 1.0);
+          p.x += (aSeed - 0.35) * drift * 0.09;
+          p.y += (0.12 + aSeed * 0.16) * drift;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+          gl_PointSize = (0.8 + aSeed) * uDpr;
+        }`,
+      fragmentShader: /* glsl */ `
+        uniform float uOpacity;
+        varying float vAlpha, vSeed;
+        void main() {
+          float a = vAlpha * uOpacity * (1.0 - smoothstep(0.15, 0.5, length(gl_PointCoord - 0.5)));
+          if (a < 0.003) discard;
+          gl_FragColor = vec4(mix(vec3(0.19, 0.22, 0.27), vec3(0.77, 0.81, 0.86), vSeed), a);
+        }`,
+    }));
+    this.dust.frustumCulled = false;
+    this.dust.renderOrder = 21;
+    this.mesh.add(this.dust);
     // Rows flipped so texture v=1 is the top of the text.
     const flipped = new Uint8Array(N);
     for (let y = 0; y < H; y++) flipped.set(out.subarray(y * W, y * W + W), (H - 1 - y) * W);
@@ -134,8 +202,10 @@ export class RingText {
   }
 
   /** @param ptr pointer in the plane's uv space, or null when not over it */
-  update(reveal: number, opacity: number, time: number, dt: number, ptr: THREE.Vector2 | null) {
+  update(reveal: number, opacity: number, time: number, dt: number, ptr: THREE.Vector2 | null, metal: number, erode: number) {
     const u = this.u;
+    u.uMetal.value = metal;
+    u.uErode.value = erode;
     u.uReveal.value = reveal;
     u.uOpacity.value = opacity;
     u.uTime.value = time;

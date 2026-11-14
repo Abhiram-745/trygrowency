@@ -2,24 +2,25 @@
 // All phase boundaries live here so timing can be tuned in one place.
 
 /** How long the hero stays pinned, in viewport heights of scrolling. */
-export const PIN_LENGTH_VH = 5.4;
+export const PIN_LENGTH_VH = 8.5;
 
 export const T = {
-  // 1. Headline breaks up (first ~25%)
-  typeStart: 0.0,
-  typeEnd: 0.25,
+  // 1. Let the reflection pass before the headline breaks up.
+  typeStart: 0.12,
+  typeEnd: 0.38,
   // 2/3. Orbit accelerates, tilts and opens once the type starts clearing…
-  orbitStart: 0.08,
-  orbitEnd: 0.36,
-  // …and the cards fly out into the mark's three facets (next ~40%)
-  flyStart: 0.25,
-  flyEnd: 0.63,
-  // 3b. Hold the video-filled mark (~20%) — flyEnd → chromeStart
-  chromeStart: 0.83,
-  // 4. Chrome reveal (final ~15%) …
-  chromeEnd: 0.955,
-  // 5. … then settle into the flat white mark.
-  whiteEnd: 1.0,
+  orbitStart: 0.16,
+  orbitEnd: 0.44,
+  // …and the cards fly out into the mark's three facets.
+  flyStart: 0.34,
+  flyEnd: 0.61,
+  // 3b. Briefly hold the assembled video-filled mark.
+  chromeStart: 0.66,
+  // 4. Chrome reveal and rotation.
+  chromeEnd: 0.82,
+  // 5. Push into a metallic facet until it fills the viewport.
+  zoomStart: 0.85,
+  zoomEnd: 1.0,
 };
 
 export const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -39,8 +40,8 @@ export interface Phases {
   fly: number;
   /** Chrome reveal 0..1 */
   chrome: number;
-  /** Chrome → flat white 0..1 */
-  white: number;
+  /** Final push into the chrome surface 0..1 */
+  zoom: number;
 }
 
 export function phases(p: number): Phases {
@@ -49,6 +50,6 @@ export function phases(p: number): Phases {
     orbit: seg(p, T.orbitStart, T.orbitEnd),
     fly: seg(p, T.flyStart, T.flyEnd),
     chrome: seg(p, T.chromeStart, T.chromeEnd),
-    white: seg(p, T.chromeEnd, T.whiteEnd),
+    zoom: seg(p, T.zoomStart, T.zoomEnd),
   };
 }

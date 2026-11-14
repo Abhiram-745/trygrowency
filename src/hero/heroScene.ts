@@ -1,6 +1,6 @@
 // Orchestrates the hero: ring of campaign cards (with a tagline inside the
 // orbit), wordmark disintegration, assembly into the mark, chrome reveal, and
-// the white-on-white end state, which can be grabbed and rotated.
+// the metallic rotation and immersive final zoom.
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { MARK_ASPECT, MARK_FACETS_UNIT } from '../brand/mark';
@@ -215,7 +215,7 @@ export class HeroScene {
     const ringR = Math.min(rByW, rByH, 7.8);
     const cardW = ringR * cardRatio;
     const zoneMid = (zoneTop + zoneBottom) / 2;
-    const ringCenter = new THREE.Vector3(0, (h / 2 - zoneMid) * pxToW + ringR * 0.04, 0);
+    const ringCenter = new THREE.Vector3(0, (h / 2 - zoneMid) * pxToW + ringR * 0.19, 0);
 
     // The assembled mark: as large as the viewport allows under the nav.
     const logoH = Math.min(visH * (small ? 0.46 : 0.62), (visW * (small ? 0.8 : 0.7)) / MARK_ASPECT);
@@ -224,10 +224,10 @@ export class HeroScene {
 
     this.L = { w, h, small, visW, visH, ringCenter, ringR, cardW, cardH: cardW * 1.25, frontMin: small ? 0.7 : 0.74, frontMax, tilt0, logoCenter, logoH };
 
-    // Tagline floats in the middle of the orbit, a touch above centre so the
-    // front cards sweep across its lower edge.
+    // Keep the tagline in the clear centre of the raised orbit. It renders
+    // above the cards as a final safeguard during the opening transition.
     this.tagline.place(
-      _c.copy(ringCenter).add(_v.set(0, ringR * (small ? 0.16 : 0.13), 0)),
+      _c.copy(ringCenter),
       Math.min(ringR * (small ? 1.25 : 1.12), visW * 0.86),
     );
 
@@ -382,12 +382,12 @@ export class HeroScene {
     this.updateLogo(ph);
     this.updateCards(ph, intro, dt);
     let tagPtr: THREE.Vector2 | null = null;
-    if (this.pointerIn && this.p < 0.07 && this.tagline.mesh.visible) {
+    if (this.pointerIn && this.p < 0.32 && this.tagline.mesh.visible) {
       this.raycaster.setFromCamera(this.ndc, this.camera);
       tagPtr = this.raycaster.intersectObject(this.tagline.mesh, false)[0]?.uv ?? null;
     }
-    this.tagline.update(easeOut(seg(intro, 0.32, 1)), 1 - smooth(seg(this.p, 0.0, 0.07)), this.time, dt, tagPtr);
-    this.word.update(ph.type);
+    this.tagline.update(seg(this.p, 0.03, 0.21), 1 - smooth(seg(this.p, 0.34, 0.42)), this.time, dt, tagPtr, seg(this.p, 0.03, 0.21), seg(this.p, 0.21, 0.40));
+    this.word.update(ph.type, seg(this.p, 0.01, 0.15));
     this.updateUi(ph);
 
     if (now - this.videoTick > 250) {
@@ -403,24 +403,28 @@ export class HeroScene {
   private updateLogo(ph: Phases) {
     const { logoCenter, logoH } = this.L;
     const c = ph.chrome;
-    const wht = smooth(ph.white);
-    // Tilt in to show the bevelled edges during the chrome reveal, then settle flat.
-    const tiltIn = Math.sin(Math.PI * Math.min(1, c * 1.15)) * (1 - wht);
-    const rest = 1 - wht;
-    this.logo.position.copy(logoCenter);
+    const zoom = easeInOut(ph.zoom);
+    // Rotation starts with the first metallic reflection and settles before
+    // the final push, so the camera travels into a broad face of silver.
+    const turn = smooth(seg(this.p, 0.66, 0.85));
+    const tilt = Math.sin(turn * Math.PI);
+    const scale = logoH * Math.exp(zoom * Math.log(75));
     this.logo.rotation.set(
-      0.06 * tiltIn + 0.03 * smooth(c) * rest + this.rotX,
-      -0.36 * tiltIn - 0.07 * smooth(c) * rest + this.rotY,
-      0,
+      tilt * 0.22 + this.rotX * (1 - zoom),
+      -turn * TAU + tilt * 0.30 + this.rotY * (1 - zoom),
+      tilt * -0.08,
     );
-    this.logo.scale.setScalar(logoH);
+    this.logo.scale.setScalar(scale);
+    // Aim at the interior of the middle facet, avoiding the gaps between blades.
+    const focus = new THREE.Vector3(-0.22, 0, 0).applyEuler(this.logo.rotation);
+    this.logo.position.copy(logoCenter).multiplyScalar(1 - zoom);
+    this.logo.position.addScaledVector(focus, -scale * zoom);
     this.logo.updateMatrixWorld(true);
 
-    const sweep = lerp(-0.2, 1.2, easeInOut(seg(c, 0.0, 0.62)));
-    const glint = lerp(-0.4, 1.5, seg(c, 0.55, 1));
-    const depth = easeOut(seg(c, 0.12, 0.7));
-    // Grabbing the white mark turns it back to chrome while you hold it.
-    this.chrome.update(sweep, glint, depth, wht * (1 - 0.92 * this.grab.v), this.hover.v);
+    const sweep = lerp(-0.2, 1.2, easeInOut(seg(c, 0.0, 0.72)));
+    const glint = lerp(-0.4, 1.5, seg(c, 0.35, 1));
+    const depth = easeOut(seg(c, 0.05, 0.65));
+    this.chrome.update(sweep, glint, depth, 0, this.hover.v);
   }
 
   private updateCards(ph: Phases, intro: number, dt: number) {
@@ -490,10 +494,11 @@ export class HeroScene {
       const aspect = _s0.x / _s0.y;
       u.uFront.value = front2;
       u.uPlaneAspect.value = aspect;
-      u.uClip.value = smooth(seg(m, 0.5, 1));
+      u.uClip.value = smooth(seg(m, 0.72, 1));
       u.uRadius.value = 0.045 * (1 - smooth(seg(m, 0.8, 1)));
       u.uLogoInv.value.copy(logoInv);
       u.uSweep.value = sweep;
+      u.uChrome.value = ph.chrome > 0 ? 1 : 0;
       u.uAspect.value = MARK_ASPECT;
       u.uOpacity.value = smooth(ie);
       u.uTime.value = this.time;
@@ -601,7 +606,7 @@ export class HeroScene {
     const { hint, markHit } = this.els;
     if (hint) hint.style.opacity = String(1 - seg(this.p, 0.005, 0.05));
     // The mark can be hovered/grabbed once the chrome reveal has finished sweeping.
-    const active = ph.chrome > 0.62;
+    const active = ph.chrome > 0.62 && ph.zoom < 0.01;
     this.markActive = active;
     if (active !== markHit.classList.contains('is-active')) {
       markHit.classList.toggle('is-active', active);

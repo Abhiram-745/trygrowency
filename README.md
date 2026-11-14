@@ -3,11 +3,11 @@
 Vite + TypeScript site. The homepage hero is a scroll-scrubbed WebGL sequence
 (three.js + GSAP ScrollTrigger):
 
-1. **Opening:** the cards are dealt into a tilted orbit under the `trygrowency` wordmark, while the tagline wipes in inside the ring; its letters swell bolder around the cursor (a slow weight wave rolls through when idle). The ring drifts at rest and you can drag it with inertia (mouse or touch). Video cards carry a frosted liquid-glass play blob that swells toward the cursor.
-2. **Disintegrate:** the wordmark erodes letter by letter from the left, edges first, into fragments that drift toward the orbit. Scrolling back rebuilds it.
-3. **Orbit → mark:** the ring speeds up, tilts and opens, then the same cards fly into the three facets of the mark and are clipped to them. Up to 3 clips play.
-4. **Chrome:** a silver sweep dissolves the footage into a bevelled chrome mark that tilts to show its edges.
-5. **White-on-white:** the mark settles to flat white with a faint edge. Hover, focus or tap blooms a silver-grey halo. Grab it (or use the arrow keys) to spin it in 3D: it turns chrome while held, then springs back to face front.
+1. **Opening:** campaign cards drift in a raised, draggable orbit below the wordmark. The tagline stays hidden until scrolling begins, then appears in the clear centre in front of the cards.
+2. **Metallic type:** scrolling sends a silver reflection across the wordmark and tagline, then erodes the letters into drifting fragments. Scrolling back rebuilds them.
+3. **Orbit → mark:** the cards accelerate and assemble into the three facets of the mark, playing up to three clips.
+4. **Chrome rotation:** a reflection replaces the footage with bevelled chrome as the mark rotates through a full turn. It stays metallic.
+5. **Immersive finish:** the final scroll pushes into the middle facet until silver fills the viewport. The sequence spans 8.5 viewport heights; there are no sections below it.
 
 ```bash
 npm install
@@ -38,4 +38,4 @@ clips should be muted 4:5 H.264 MP4 loops. The current files are generated stand
 - The `<h1>` holds the real text, and the wordmark SVG is inlined at build time. WebGL hides the SVG's visuals but keeps its layout.
 - `prefers-reduced-motion`, or no WebGL2: no pin and no three.js download. You get the static wordmark plus the mark filled with posters.
 - Front-of-ring posters load first. At most 3 muted clips play, and video pauses when the hero is offscreen or the tab is hidden.
-- The nav (with **Book a call**) stays fixed at every width.
+- The compact brand navigation stays fixed at every width.
