@@ -43,7 +43,7 @@ for (let i = 0; i < glyphs.length; i++) {
 // running straight down into the descender, ending in a diagonal terminal
 // cut at the same angle as the Growency mark's lower edge (MARK_CUT_SLOPE in
 // src/brand/mark.ts). Coordinates are glyph-relative (Geist Bold, 1000 upm).
-const CUT_SLOPE = 0.62; // rise over run of the terminal cut
+const CUT_SLOPE = 0.525; // rise over run of the terminal cut (MARK_CUT_SLOPE)
 const y = letters[letters.length - 1];
 {
   const o = y.x;

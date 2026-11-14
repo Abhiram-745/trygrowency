@@ -2,7 +2,7 @@
 // All phase boundaries live here so timing can be tuned in one place.
 
 /** How long the hero stays pinned, in viewport heights of scrolling. */
-export const PIN_LENGTH_VH = 4.2;
+export const PIN_LENGTH_VH = 5.4;
 
 export const T = {
   // 1. Headline breaks up (first ~25%)

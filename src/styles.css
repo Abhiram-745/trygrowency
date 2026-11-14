@@ -214,8 +214,12 @@ h3 {
   z-index: 1;
   cursor: grab;
 }
-.hero.is-dragging .hero__canvas {
+.hero.is-dragging .hero__canvas,
+.hero.is-dragging .hero__mark-hit {
   cursor: grabbing;
+}
+.hero.is-blob .hero__canvas {
+  cursor: pointer;
 }
 .hero:not(.is-gl) .hero__canvas {
   display: none;
@@ -229,7 +233,8 @@ h3 {
   border: 0;
   border-radius: 24px;
   background: transparent;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
 }
 .hero__mark-hit.is-active {
