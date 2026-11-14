@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>trygrowency: Growency</title>
+    <meta name="description" content="Growency builds growth campaigns: strategy, creative and performance, under one roof." />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- First visible campaign posters load first -->
+    <link rel="preload" href="/media/campaigns/placeholder-01.jpg" as="image" fetchpriority="high" />
+    <link rel="preload" href="/media/campaigns/placeholder-02.jpg" as="image" />
+    <link rel="preload" href="/media/campaigns/placeholder-18.jpg" as="image" />
+    <script>
+      document.documentElement.classList.replace('no-js', 'js');
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="site-nav" data-nav>
+      <a class="site-nav__brand" href="/" aria-label="Growency home">
+        <svg class="site-nav__mark" data-mark-icon aria-hidden="true" focusable="false"></svg>
+        <span class="site-nav__name">growency</span>
+      </a>
+      <nav class="site-nav__links" aria-label="Primary">
+        <a href="#work">Work</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+      </nav>
+      <a class="button button--primary site-nav__cta" href="#contact">Book a call</a>
+    </header>
+
+    <main>
+      <section class="hero" id="hero" aria-labelledby="hero-title" data-hero>
+        <div class="hero__stage" data-hero-stage>
+          <h1 class="hero__wordmark" id="hero-title" data-wordmark>
+            <span class="visually-hidden">trygrowency</span>
+            <!--WORDMARK-->
+          </h1>
+
+          <canvas
+            class="hero__canvas"
+            data-hero-canvas
+            role="img"
+            aria-label="A ring of Growency campaign work that assembles into the Growency mark as you scroll."
+          ></canvas>
+
+          <!-- Hover / focus / tap target for the final white-on-white mark -->
+          <button class="hero__mark-hit" type="button" data-mark-hit aria-pressed="false" tabindex="-1">
+            <span class="visually-hidden">Highlight the Growency mark</span>
+          </button>
+
+          <!-- Static layout: reduced motion, no WebGL, or no JS -->
+          <div class="hero__static" data-hero-static>
+            <svg class="hero__static-mark" data-static-mark role="img" aria-label="The Growency mark, filled with campaign work"></svg>
+          </div>
+
+          <p class="hero__hint" data-hero-hint aria-hidden="true">
+            <span class="hero__hint-drag">Drag to explore</span>
+            <span class="hero__hint-scroll">Scroll</span>
+          </p>
+        </div>
+      </section>
+
+      <section class="section work" id="work" aria-labelledby="work-title">
+        <div id="main-content" tabindex="-1"></div>
+        <div class="section__head">
+          <h2 id="work-title">Selected work</h2>
+          <p>Campaigns across launch, brand and performance.</p>
+        </div>
+        <ul class="work__grid" data-work-grid></ul>
+      </section>
+
+      <section class="section services" id="services" aria-labelledby="services-title">
+        <div class="section__head">
+          <h2 id="services-title">What we do</h2>
+        </div>
+        <ul class="services__list">
+          <li><h3>Strategy</h3><p>Positioning, audiences and the plan to reach them.</p></li>
+          <li><h3>Creative</h3><p>Campaign ideas, film, design and content built to perform.</p></li>
+          <li><h3>Performance</h3><p>Paid media, testing and measurement that compound.</p></li>
+        </ul>
+      </section>
+
+      <section class="section about" id="about" aria-labelledby="about-title">
+        <div class="section__head">
+          <h2 id="about-title">About Growency</h2>
+          <p>A growth studio for brands that want work people notice and numbers that move.</p>
+        </div>
+      </section>
+
+      <section class="section contact" id="contact" aria-labelledby="contact-title">
+        <h2 id="contact-title">Let’s grow something.</h2>
+        <!-- TODO: point at the real booking page / form -->
+        <a class="button button--primary button--large" href="#contact">Book a call</a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© Growency</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
