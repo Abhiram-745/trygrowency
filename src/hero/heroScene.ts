@@ -9,7 +9,7 @@ import { Card } from './card';
 import { ChromeMark } from './chromeMark';
 import { PosterLoader, VideoPool } from './media';
 import { RingText } from './ringText';
-import { assignTiles } from './tiles';
+import { assignTiles, type Tile } from './tiles';
 import { clamp01, easeInOut, easeOut, lerp, phases, seg, smooth, type Phases } from './timeline';
 import { WordmarkFx } from './wordmarkFx';
 
@@ -73,6 +73,9 @@ export class HeroScene {
   private uiCam = new THREE.OrthographicCamera(0, 1, 0, -1, -10, 10);
   private logo = new THREE.Group();
   private cards: Card[];
+  private tiles: Tile[];
+  /** Order in which cards leave the ring (their angular order), frozen once the flight starts. */
+  private leaveRank: number[] = [];
   private blobs: BlobState[];
   private chrome: ChromeMark;
   private tagline = new RingText();
@@ -124,8 +127,9 @@ export class HeroScene {
     this.renderer.toneMappingExposure = 1.05;
     this.camera.position.set(0, 0, CAM_Z);
 
-    const tiles = assignTiles(campaigns);
-    this.cards = campaigns.map((c, i) => new Card(i, tiles[i], !!c.video));
+    this.tiles = assignTiles(campaigns);
+    this.cards = campaigns.map((c, i) => new Card(i, this.tiles[i], !!c.video));
+    this.leaveRank = this.cards.map((_, i) => i);
     this.blobs = this.cards.map(() => ({ hov: 0, ptr: new THREE.Vector2(0, -1) }));
     for (const c of this.cards) this.scene.add(c.mesh);
     this.scene.add(this.tagline.mesh);
@@ -377,7 +381,12 @@ export class HeroScene {
 
     this.updateLogo(ph);
     this.updateCards(ph, intro, dt);
-    this.tagline.update(easeOut(seg(intro, 0.32, 1)), 1 - smooth(seg(this.p, 0.0, 0.07)), this.time);
+    let tagPtr: THREE.Vector2 | null = null;
+    if (this.pointerIn && this.p < 0.07 && this.tagline.mesh.visible) {
+      this.raycaster.setFromCamera(this.ndc, this.camera);
+      tagPtr = this.raycaster.intersectObject(this.tagline.mesh, false)[0]?.uv ?? null;
+    }
+    this.tagline.update(easeOut(seg(intro, 0.32, 1)), 1 - smooth(seg(this.p, 0.0, 0.07)), this.time, dt, tagPtr);
     this.word.update(ph.type);
     this.updateUi(ph);
 
@@ -420,7 +429,7 @@ export class HeroScene {
     const o = easeInOut(ph.orbit);
     const tilt = lerp(L.tilt0, Math.max(0.62, L.tilt0 + 0.2), o);
     const radius = L.ringR * lerp(1, 1.1, o);
-    const boost = Math.pow(ph.orbit, 2) * 2.4 + ph.fly * 1.2; // accelerate (reversible: driven by scroll)
+    const boost = Math.pow(ph.orbit, 2) * 2.4 + easeOut(ph.fly) * 0.5; // accelerate (reversible: driven by scroll)
     const center = _c.copy(L.ringCenter).lerp(L.logoCenter, o * 0.85);
     const ringM = _m.compose(center, _q0.setFromEuler(_e.set(tilt, 0, -0.07 * (1 - o))), ONE);
     const logoM = this.logo.matrixWorld;
@@ -439,6 +448,7 @@ export class HeroScene {
       }
     }
     let blobHot = false;
+    if (ph.fly <= 0) this.matchTiles(boost, tilt);
 
     for (const card of this.cards) {
       const i = card.index;
@@ -454,23 +464,23 @@ export class HeroScene {
       _q0.setFromEuler(_e.set(tilt, 0, -0.07 * (1 - o))).multiply(_q1.setFromEuler(_e.set(-tilt * 0.55, a, 0)));
       _s0.set(L.cardW * fs, L.cardH * fs, 1);
 
-      // Stagger: facets fill together, cards within a facet in sequence.
-      const rank = (i % 6) * 3 + card.tile.facet;
-      const delay = (rank / (N - 1)) * 0.32;
-      const m = easeInOut(clamp01((ph.fly - delay) / 0.68));
+      // Cards leave in one wave around the ring, in angular order.
+      const delay = (this.leaveRank[i] / (N - 1)) * 0.26;
+      const mt = clamp01((ph.fly - delay) / 0.74);
+      const m = easeInOut(mt);
 
       let front2 = front;
-      if (m > 0) {
+      if (mt > 0) {
         const t = card.tile;
         const z = 0.004 + (i % 6) * 0.0012;
         _p1.set(t.cx, t.cy, z).applyMatrix4(logoM);
         _q1.setFromRotationMatrix(logoM);
         _s1.set(t.w * L.logoH * 1.015, t.h * L.logoH * 1.015, 1);
         _p0.lerp(_p1, m);
-        _p0.z += Math.sin(Math.PI * m) * L.ringR * 0.35; // arc toward the viewer
-        _q0.slerp(_q1, m);
+        _p0.z += Math.sin(Math.PI * m) * L.ringR * 0.12; // shallow lift toward the viewer
+        _q0.slerp(_q1, easeOut(Math.min(1, mt * 1.7))); // face front early, then glide
         _s0.lerp(_s1, m);
-        front2 = lerp(front, 1, Math.min(1, m * 1.6));
+        front2 = lerp(front, 1, easeOut(Math.min(1, mt * 2)));
       }
       card.mesh.position.copy(_p0);
       card.mesh.quaternion.copy(_q0);
@@ -480,8 +490,8 @@ export class HeroScene {
       const aspect = _s0.x / _s0.y;
       u.uFront.value = front2;
       u.uPlaneAspect.value = aspect;
-      u.uClip.value = smooth(seg(m, 0.72, 1));
-      u.uRadius.value = 0.045 * (1 - smooth(seg(m, 0.5, 1)));
+      u.uClip.value = smooth(seg(m, 0.5, 1));
+      u.uRadius.value = 0.045 * (1 - smooth(seg(m, 0.8, 1)));
       u.uLogoInv.value.copy(logoInv);
       u.uSweep.value = sweep;
       u.uAspect.value = MARK_ASPECT;
@@ -515,6 +525,53 @@ export class HeroScene {
     this.els.hero.classList.toggle('is-blob', blobHot && !this.dragging);
   }
 
+  /**
+   * Give each card the tile nearest its place on the ring, so cards fly
+   * straight in without crossing. Cards are sorted by their on-screen angle
+   * around the ring, tiles by their angle around the mark, and the cyclic
+   * offset with the least total turning wins. Within a facet, video cards then
+   * take the most visible tiles.
+   */
+  private matchTiles(boost: number, tilt: number) {
+    const N = this.cards.length;
+    const st = Math.sin(tilt);
+    const cardAng = this.cards.map((c) => {
+      const a = (c.index / N) * TAU + this.spin + boost;
+      return { c, th: Math.atan2(-Math.cos(a) * st, Math.sin(a)) };
+    }).sort((x, y) => x.th - y.th);
+    const tileAng = this.tiles.map((t) => ({ t, th: Math.atan2(t.cy, t.cx) })).sort((x, y) => x.th - y.th);
+    const diff = (a: number, b: number) => {
+      const d = Math.abs(a - b) % TAU;
+      return d > Math.PI ? TAU - d : d;
+    };
+    let best = 0;
+    let bestCost = Infinity;
+    for (let k = 0; k < N; k++) {
+      let cost = 0;
+      for (let j = 0; j < N; j++) cost += diff(cardAng[j].th, tileAng[(j + k) % N].th) ** 2;
+      if (cost < bestCost) {
+        bestCost = cost;
+        best = k;
+      }
+    }
+    const assigned = new Map<Card, Tile>();
+    cardAng.forEach((o, j) => {
+      assigned.set(o.c, tileAng[(j + best) % N].t);
+      this.leaveRank[o.c.index] = j;
+    });
+    // Within each facet, videos take the most visible tiles.
+    for (let f = 0; f < MARK_FACETS_UNIT.length; f++) {
+      const cs = this.cards.filter((c) => assigned.get(c)!.facet === f);
+      const ts = cs.map((c) => assigned.get(c)!).sort((a, b) => b.coverage - a.coverage);
+      const order = [...cs].sort((a, b) => Number(b.hasVideo) - Number(a.hasVideo) || this.leaveRank[a.index] - this.leaveRank[b.index]);
+      order.forEach((c, k) => assigned.set(c, ts[k]));
+    }
+    for (const c of this.cards) {
+      const t = assigned.get(c)!;
+      if (c.tile !== t) c.setTile(t);
+    }
+  }
+
   private updateVideos(ph: Phases) {
     if (!this.visible || document.hidden) return this.videos.pauseAll();
     if (ph.chrome > 0.45) return this.videos.pauseAll();
@@ -522,7 +579,7 @@ export class HeroScene {
       // In orbit: the clips nearest the front.
       const ids = this.cards
         .filter((c) => c.hasVideo)
-        .map((c) => ({ i: c.index, f: Math.cos(this.angleOf(c.index) + Math.pow(ph.orbit, 2) * 2.4 + ph.fly * 1.2) }))
+        .map((c) => ({ i: c.index, f: Math.cos(this.angleOf(c.index) + Math.pow(ph.orbit, 2) * 2.4 + easeOut(ph.fly) * 0.5) }))
         .filter((o) => o.f > 0.35)
         .sort((a, b) => b.f - a.f)
         .map((o) => o.i);

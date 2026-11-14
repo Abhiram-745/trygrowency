@@ -3,7 +3,7 @@
 Vite + TypeScript site. The homepage hero is a scroll-scrubbed WebGL sequence
 (three.js + GSAP ScrollTrigger):
 
-1. **Opening:** the cards are dealt into a tilted orbit under the `trygrowency` wordmark, while the tagline wipes in inside the ring. The ring drifts at rest and you can drag it with inertia (mouse or touch). Video cards carry a frosted liquid-glass play blob that swells toward the cursor.
+1. **Opening:** the cards are dealt into a tilted orbit under the `trygrowency` wordmark, while the tagline wipes in inside the ring; its letters swell bolder around the cursor (a slow weight wave rolls through when idle). The ring drifts at rest and you can drag it with inertia (mouse or touch). Video cards carry a frosted liquid-glass play blob that swells toward the cursor.
 2. **Disintegrate:** the wordmark erodes letter by letter from the left, edges first, into fragments that drift toward the orbit. Scrolling back rebuilds it.
 3. **Orbit → mark:** the ring speeds up, tilts and opens, then the same cards fly into the three facets of the mark and are clipped to them. Up to 3 clips play.
 4. **Chrome:** a silver sweep dissolves the footage into a bevelled chrome mark that tilts to show its edges.

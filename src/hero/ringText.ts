@@ -1,16 +1,18 @@
 // Tagline that sits inside the orbit, like the planet in Saturn's rings.
-// Rendered to a canvas texture on a camera-facing plane at the ring centre, so
-// back cards pass behind it and front cards sweep in front. It wipes in as the
-// carousel arrives and clears as soon as scrolling starts.
+//
+// The text is rendered once into a signed-distance field, so its weight can be
+// changed per pixel in the shader: letters swell bolder around the cursor (or
+// finger) and relax when it leaves; with nobody interacting, a slow weight
+// wave rolls through the line. It sits on a camera-facing plane at the ring
+// centre, so back cards pass behind it and front cards in front. It wipes in
+// as the carousel arrives and clears as soon as scrolling starts.
 import * as THREE from 'three';
 
-export const TAGLINE = {
-  eyebrow: 'Strategy · Creative · Performance',
-  before: 'The only ',
-  accent: 'growth',
-  after: ' agency',
-  line2: 'you’ll ever need.',
-};
+export const TAGLINE = ['The only growth agency', 'you’ll ever need.'];
+
+const SS = 2; // supersample
+const FONT_PX = 120;
+const SPREAD = 18 * SS; // SDF range in texture px
 
 const vertexShader = /* glsl */ `
 uniform float uReveal;
@@ -18,27 +20,35 @@ varying vec2 vUv;
 void main() {
   vUv = uv;
   vec3 p = position;
-  p.y -= (1.0 - uReveal) * 0.04; // slight rise as it reveals
+  p.y -= (1.0 - uReveal) * 0.05;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
 
 const fragmentShader = /* glsl */ `
 uniform sampler2D map;
-uniform float uReveal, uOpacity, uTime;
+uniform float uReveal, uOpacity, uTime, uAspect, uPtrStr, uThin, uBold;
+uniform vec2 uPtr;
 varying vec2 vUv;
 void main() {
-  vec4 t = texture2D(map, vUv);
-  // reveal: soft wipe, top-left first, line by line
-  float line = vUv.y > 0.62 ? 0.0 : (vUv.y > 0.3 ? 0.18 : 0.34);
-  float coord = vUv.x * 0.62 + line;
-  float r = uReveal * 1.35 - 0.2;
-  float m = smoothstep(r, r - 0.18, coord);
-  // a gentle gloss band glides across once revealed
-  float band = exp(-pow((vUv.x - fract(uTime * 0.08) * 1.8 + 0.4) / 0.06, 2.0));
-  vec3 col = t.rgb + band * 0.22 * t.a;
-  float a = t.a * m * uOpacity;
+  float sd = (texture2D(map, vUv).r - 0.5) * 2.0; // -1..1 of SPREAD, + inside
+
+  // weight field: swell around the pointer, idle wave when untouched
+  vec2 d = (vUv - uPtr) * vec2(uAspect, 1.0);
+  float near = exp(-dot(d, d) / 0.11) * uPtrStr;
+  float wave = smoothstep(0.55, 1.0, 0.5 + 0.5 * sin(vUv.x * 5.0 - vUv.y * 1.5 - uTime * 1.25)) * (1.0 - uPtrStr) * 0.55;
+  float w = clamp(near + wave, 0.0, 1.0);
+  float edge = sd + mix(uThin, uBold, w);
+  float aa = max(fwidth(edge), 1e-4) * 0.75;
+  float ink = smoothstep(-aa, aa, edge);
+
+  // reveal: soft wipe, line by line
+  float line = vUv.y > 0.5 ? 0.0 : 0.22;
+  float r = uReveal * 1.3 - 0.2;
+  float m = smoothstep(r, r - 0.16, vUv.x * 0.7 + line);
+
+  float a = ink * m * uOpacity;
   if (a < 0.003) discard;
-  gl_FragColor = vec4(col, a);
+  gl_FragColor = vec4(vec3(0.067, 0.067, 0.078), a);
 }`;
 
 export class RingText {
@@ -48,81 +58,73 @@ export class RingText {
     uReveal: { value: 0 },
     uOpacity: { value: 1 },
     uTime: { value: 0 },
+    uAspect: { value: 3 },
+    uPtr: { value: new THREE.Vector2(0.5, -1) },
+    uPtrStr: { value: 0 },
+    uThin: { value: 0 },
+    uBold: { value: 0 },
   };
   private aspect = 3;
+  private ptrStr = 0;
 
   constructor() {
     this.mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(1, 1),
       new THREE.ShaderMaterial({ uniforms: this.u, vertexShader, fragmentShader, transparent: true, depthWrite: false }),
     );
-    this.mesh.renderOrder = 0;
     this.draw();
   }
 
-  /** Re-render the texture (fonts must be loaded). */
+  /** Rasterise the tagline (weight 500) and convert it to a signed-distance field. */
   draw() {
-    const S = 2; // supersample
-    const W = 1400 * S;
-    const H = 460 * S;
+    const pad = SPREAD + 8;
+    const lineH = FONT_PX * 1.12 * SS;
+    const probe = document.createElement('canvas').getContext('2d')!;
+    const font = `500 ${FONT_PX * SS}px Geist, ui-sans-serif, system-ui, sans-serif`;
+    probe.font = font;
+    probe.letterSpacing = `${-0.03 * FONT_PX * SS}px`;
+    const widths = TAGLINE.map((l) => probe.measureText(l).width);
+    const W = Math.ceil(Math.max(...widths) + pad * 2);
+    const H = Math.ceil(lineH * TAGLINE.length + pad * 2);
+
     const c = document.createElement('canvas');
     c.width = W;
     c.height = H;
-    const ctx = c.getContext('2d')!;
-    ctx.textAlign = 'left';
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    ctx.font = font;
+    ctx.letterSpacing = probe.letterSpacing;
     ctx.textBaseline = 'alphabetic';
-    const font = (weight: number, size: number, italic = false) =>
-      `${italic ? 'italic ' : ''}${weight} ${size * S}px Geist, ui-sans-serif, system-ui, sans-serif`;
+    ctx.fillStyle = '#000';
+    TAGLINE.forEach((l, i) => ctx.fillText(l, (W - widths[i]) / 2, pad + lineH * i + FONT_PX * SS * 0.92));
+    const src = ctx.getImageData(0, 0, W, H).data;
 
-    // eyebrow
-    ctx.font = font(500, 30);
-    ctx.letterSpacing = `${0.18 * 30 * S}px`;
-    ctx.fillStyle = '#7a7b82';
-    const eb = TAGLINE.eyebrow.toUpperCase();
-    ctx.fillText(eb, (W - ctx.measureText(eb).width) / 2, 70 * S);
-    ctx.letterSpacing = `${-0.035 * 132 * S}px`;
-
-    // line 1 with gradient accent
-    const big = 132;
-    const parts = [
-      { t: TAGLINE.before, f: font(650, big) },
-      { t: TAGLINE.accent, f: font(650, big, true), accent: true },
-      { t: TAGLINE.after, f: font(650, big) },
-    ];
-    let total = 0;
-    for (const p of parts) {
-      ctx.font = p.f;
-      total += ctx.measureText(p.t).width + (p.accent ? big * 0.06 * S : 0);
+    // Two-pass chamfer distance, inside and outside, combined into a signed field.
+    const N = W * H;
+    const inside = new Uint8Array(N);
+    for (let i = 0; i < N; i++) inside[i] = src[i * 4 + 3] > 127 ? 1 : 0;
+    const dOut = chamfer(inside, W, H, 1); // distance to ink, for outside pixels
+    const dIn = chamfer(inside, W, H, 0); // distance to background, for inside pixels
+    const out = new Uint8Array(N);
+    for (let i = 0; i < N; i++) {
+      const sd = inside[i] ? dIn[i] / 3 - 0.5 : -(dOut[i] / 3 - 0.5);
+      out[i] = Math.max(0, Math.min(255, Math.round((sd / SPREAD) * 127.5 + 127.5)));
     }
-    let x = (W - total) / 2;
-    const y1 = 240 * S;
-    for (const p of parts) {
-      ctx.font = p.f;
-      const w = ctx.measureText(p.t).width;
-      if (p.accent) {
-        const g = ctx.createLinearGradient(x, y1 - big * S, x + w, y1);
-        g.addColorStop(0, '#ff6a2b');
-        g.addColorStop(0.45, '#ff2e7e');
-        g.addColorStop(1, '#7b5cff');
-        ctx.fillStyle = g;
-      } else ctx.fillStyle = '#111114';
-      ctx.fillText(p.t, x, y1);
-      x += w + (p.accent ? big * 0.06 * S : 0); // italic overhang needs a little air
-    }
-
-    // line 2
-    ctx.font = font(650, big);
-    ctx.fillStyle = '#111114';
-    const l2 = TAGLINE.line2;
-    ctx.fillText(l2, (W - ctx.measureText(l2).width) / 2, y1 + 150 * S);
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.NoColorSpace;
-    tex.anisotropy = 4;
-    tex.premultiplyAlpha = false;
+    // Rows flipped so texture v=1 is the top of the text.
+    const flipped = new Uint8Array(N);
+    for (let y = 0; y < H; y++) flipped.set(out.subarray(y * W, y * W + W), (H - 1 - y) * W);
+    const tex = new THREE.DataTexture(flipped, W, H, THREE.RedFormat, THREE.UnsignedByteType);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    tex.unpackAlignment = 1;
+    tex.needsUpdate = true;
     this.u.map.value?.dispose();
     this.u.map.value = tex;
     this.aspect = W / H;
+    this.u.uAspect.value = this.aspect;
+    // Weight range, in SDF units (fraction of SPREAD): thinner at rest, bold near the pointer.
+    this.u.uThin.value = -(1.6 * SS) / SPREAD;
+    this.u.uBold.value = (5.5 * SS) / SPREAD;
   }
 
   /** Place at the ring centre, `width` world units wide, facing the camera. */
@@ -131,10 +133,53 @@ export class RingText {
     this.mesh.scale.set(width, width / this.aspect, 1);
   }
 
-  update(reveal: number, opacity: number, time: number) {
-    this.u.uReveal.value = reveal;
-    this.u.uOpacity.value = opacity;
-    this.u.uTime.value = time;
+  /** @param ptr pointer in the plane's uv space, or null when not over it */
+  update(reveal: number, opacity: number, time: number, dt: number, ptr: THREE.Vector2 | null) {
+    const u = this.u;
+    u.uReveal.value = reveal;
+    u.uOpacity.value = opacity;
+    u.uTime.value = time;
+    const target = ptr ? 1 : 0;
+    this.ptrStr += (target - this.ptrStr) * (1 - Math.exp(-dt * (target ? 6 : 2.2)));
+    u.uPtrStr.value = this.ptrStr;
+    if (ptr) u.uPtr.value.lerp(ptr, 1 - Math.exp(-dt * 12));
     this.mesh.visible = opacity > 0.002 && reveal > 0.001;
   }
+}
+
+/**
+ * Chamfer (3-4) distance transform. Returns, for every pixel whose mask value
+ * differs from `target`, the distance (×3) to the nearest pixel equal to `target`.
+ */
+function chamfer(mask: Uint8Array, W: number, H: number, target: 0 | 1) {
+  const BIG = 1e6;
+  const d = new Float32Array(W * H);
+  for (let i = 0; i < d.length; i++) d[i] = mask[i] === target ? 0 : BIG;
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (!d[i]) continue;
+      let v = d[i];
+      if (x > 0) v = Math.min(v, d[i - 1] + 3);
+      if (y > 0) {
+        v = Math.min(v, d[i - W] + 3);
+        if (x > 0) v = Math.min(v, d[i - W - 1] + 4);
+        if (x < W - 1) v = Math.min(v, d[i - W + 1] + 4);
+      }
+      d[i] = v;
+    }
+  for (let y = H - 1; y >= 0; y--)
+    for (let x = W - 1; x >= 0; x--) {
+      const i = y * W + x;
+      if (!d[i]) continue;
+      let v = d[i];
+      if (x < W - 1) v = Math.min(v, d[i + 1] + 3);
+      if (y < H - 1) {
+        v = Math.min(v, d[i + W] + 3);
+        if (x < W - 1) v = Math.min(v, d[i + W + 1] + 4);
+        if (x > 0) v = Math.min(v, d[i + W - 1] + 4);
+      }
+      d[i] = v;
+    }
+  return d;
 }

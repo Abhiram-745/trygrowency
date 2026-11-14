@@ -120,11 +120,13 @@ void main() {
     }
   }
 
-  // clip to this card's facet of the mark
-  float d = sdPoly(vMark);
+  // clip to this card's facet: the facet boundary closes in around the card as
+  // it arrives (uClip 0 → 1), then the card's own rounded edge gives way.
+  float open = 1.0 - uClip;
+  float d = sdPoly(vMark) - open * open * 3.0;
   float aa = max(fwidth(d), 1e-4);
   float facetMask = 1.0 - smoothstep(-aa, aa, d);
-  float a = mix(cardMask, facetMask, uClip);
+  float a = mix(cardMask, 1.0, smoothstep(0.75, 1.0, uClip)) * facetMask;
 
   // depth clarity: back of the orbit fades toward the white page
   col = mix(vec3(1.0), col, mix(0.36, 1.0, uFront));
@@ -146,11 +148,10 @@ export class Card {
 
   constructor(
     readonly index: number,
-    readonly tile: Tile,
+    public tile: Tile,
     readonly hasVideo: boolean,
   ) {
-    const poly = MARK_FACETS_UNIT[tile.facet].map(([x, y]) => new THREE.Vector2(x, y));
-    while (poly.length < MAX_POLY) poly.push(new THREE.Vector2());
+    const poly = Array.from({ length: MAX_POLY }, () => new THREE.Vector2());
     this.u = {
       map: { value: null as THREE.Texture | null },
       uHasMap: { value: 0 },
@@ -165,7 +166,7 @@ export class Card {
       uLogoInv: { value: new THREE.Matrix4() },
       uAspect: { value: 1 },
       uPoly: { value: poly },
-      uPolyN: { value: MARK_FACETS_UNIT[tile.facet].length },
+      uPolyN: { value: 0 },
       uPlay: { value: 0 },
       uHov: { value: 0 },
       uTime: { value: 0 },
@@ -182,6 +183,15 @@ export class Card {
     });
     this.mesh = new THREE.Mesh(GEO, mat);
     this.mesh.matrixAutoUpdate = true;
+    this.setTile(tile);
+  }
+
+  /** Point this card at a tile (and its facet's clip polygon). */
+  setTile(tile: Tile) {
+    this.tile = tile;
+    const f = MARK_FACETS_UNIT[tile.facet];
+    f.forEach(([x, y], i) => this.u.uPoly.value[i].set(x, y));
+    this.u.uPolyN.value = f.length;
   }
 
   setTexture(tex: THREE.Texture | null, aspect: number) {
