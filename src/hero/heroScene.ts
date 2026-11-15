@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { MARK_ASPECT, MARK_FACETS_UNIT } from '../brand/mark';
 import type { Campaign } from '../content/campaigns';
 import { Card } from './card';
+import { CampaignViewer, type CardBounds } from './campaignViewer';
 import { ChromeMark } from './chromeMark';
 import { PosterLoader, VideoPool } from './media';
 import { RingText } from './ringText';
@@ -66,6 +67,9 @@ const _v2 = new THREE.Vector2();
 const ONE = new THREE.Vector3(1, 1, 1);
 
 export class HeroScene {
+  private viewer = new CampaignViewer();
+  private cardPress: { index: number; x: number; y: number; pointerId: number } | null = null;
+  private keyboardCard = 0;
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
@@ -118,7 +122,7 @@ export class HeroScene {
 
   constructor(
     private els: Els,
-    campaigns: Campaign[],
+    private campaigns: Campaign[],
   ) {
     this.renderer = new THREE.WebGLRenderer({ canvas: els.canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
     this.renderer.setClearColor(0xffffff, 1);
@@ -243,14 +247,30 @@ export class HeroScene {
 
   // ── Input ──────────────────────────────────────────────
   private bindInput() {
-    const { stage, markHit, hero } = this.els;
+    const { stage, markHit, hero, canvas } = this.els;
+    canvas.tabIndex = 0;
+    canvas.setAttribute('aria-label', 'Campaign carousel. Use left and right arrow keys to choose a campaign, then Enter to preview. Drag to spin.');
+    canvas.addEventListener('keydown', e => {
+      if (phases(this.p).fly > 0.02 || this.viewer.active) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        this.keyboardCard = (this.keyboardCard + (e.key === 'ArrowRight' ? 1 : -1) + this.cards.length) % this.cards.length;
+        this.spin = -this.keyboardCard / this.cards.length * TAU;
+        this.spinVel = 0;
+        canvas.setAttribute('aria-label', `${this.campaigns[this.keyboardCard].title}. Press Enter to preview; arrow keys choose another campaign.`);
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.openCampaign(this.keyboardCard);
+      }
+    });
     const setNdc = (e: PointerEvent) => {
       const r = stage.getBoundingClientRect();
       this.ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     };
 
     stage.addEventListener('pointerdown', (e) => {
-      if (e.button > 0) return;
+      if (e.button > 0 || this.viewer.active) return;
+      this.cardPress = null;
       setNdc(e);
       this.pointerIn = true;
       this.lastX = e.clientX;
@@ -270,6 +290,10 @@ export class HeroScene {
       // Ring: drag to spin.
       if (phases(this.p).fly > 0.02) return;
       if ((e.target as HTMLElement).closest('a,button')) return;
+      this.raycaster.setFromCamera(this.ndc, this.camera);
+      const hit = this.raycaster.intersectObjects(this.cards.map(c => c.mesh), false)[0];
+      const card = hit && this.cards.find(c => c.mesh === hit.object);
+      if (card) this.cardPress = { index: card.index, x: e.clientX, y: e.clientY, pointerId: e.pointerId };
       this.dragging = true;
       this.spinVel = 0;
       hero.classList.add('is-dragging');
@@ -281,6 +305,7 @@ export class HeroScene {
     stage.addEventListener('pointerleave', () => (this.pointerIn = false));
 
     window.addEventListener('pointermove', (e) => {
+      if (this.cardPress && Math.hypot(e.clientX - this.cardPress.x, e.clientY - this.cardPress.y) > 9) this.cardPress = null;
       if (!this.dragging && !this.logoDragging) return;
       const now = performance.now();
       const dx = e.clientX - this.lastX;
@@ -302,7 +327,9 @@ export class HeroScene {
       this.lastY = e.clientY;
       this.lastT = now;
     });
-    const end = () => {
+    const end = (event: PointerEvent) => {
+      const pressed = this.cardPress;
+      this.cardPress = null;
       const held = performance.now() - this.lastT > 90; // released after holding still
       if (this.dragging) {
         this.dragging = false;
@@ -317,6 +344,11 @@ export class HeroScene {
         gsap.to(this.grab, { v: 0, duration: 1.1, delay: 0.5, ease: 'power2.inOut', overwrite: true });
       }
       hero.classList.remove('is-dragging');
+      if (pressed && event.type === 'pointerup' && event.pointerId === pressed.pointerId && Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) <= 9 && phases(this.p).fly < .02) {
+        this.spinVel = 0;
+        canvas.focus({ preventScroll: true });
+        this.openCampaign(pressed.index);
+      }
     };
     window.addEventListener('pointerup', end);
     window.addEventListener('pointercancel', end);
@@ -348,6 +380,37 @@ export class HeroScene {
     });
   }
 
+  private cardBounds(card: Card): CardBounds {
+    card.mesh.updateMatrixWorld(true);
+    const corners = [[-.5, .5], [.5, .5], [.5, -.5], [-.5, -.5]].map(([x, y]) =>
+      this.worldToPx(card.mesh.localToWorld(new THREE.Vector3(x, y, 0))));
+    const rect = this.els.stage.getBoundingClientRect();
+    const xs = corners.map(p => p.x), ys = corners.map(p => p.y);
+    return {
+      left: rect.left + Math.min(...xs), top: rect.top + Math.min(...ys),
+      width: Math.max(12, Math.max(...xs) - Math.min(...xs)), height: Math.max(12, Math.max(...ys) - Math.min(...ys)),
+      rotation: Math.atan2(corners[1].y - corners[0].y, corners[1].x - corners[0].x) * 180 / Math.PI,
+    };
+  }
+
+  private openCampaign(index: number) {
+    if (this.viewer.active || phases(this.p).fly > .02) return;
+    const card = this.cards[index];
+    this.dragging = false;
+    this.spinVel = 0;
+    this.videos.pauseAll();
+    const openedAt = performance.now();
+    card.mesh.visible = false;
+    this.renderer.clear();
+    this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.ui, this.uiCam);
+    this.viewer.open(this.campaigns[index], () => this.cardBounds(card), () => {
+      this.startTime += performance.now() - openedAt;
+      card.mesh.visible = true;
+      this.videoTick = 0;
+    });
+  }
+
   private angleOf(i: number) {
     return (i / this.cards.length) * TAU + this.spin;
   }
@@ -357,7 +420,7 @@ export class HeroScene {
     this.raf = requestAnimationFrame(this.frame);
     const dt = Math.min(0.05, (now - this.prevTime) / 1000);
     this.prevTime = now;
-    if (!this.visible) return;
+    if (!this.visible || this.viewer.active) return;
     this.time += dt;
 
     // Ease rendered progress toward scroll progress (works in both directions).
@@ -483,7 +546,9 @@ export class HeroScene {
         const t = card.tile;
         const z = 0.004 + (i % 6) * 0.0012;
         _p1.set(t.cx, t.cy, z).applyMatrix4(logoM);
-        _q1.setFromRotationMatrix(logoM);
+        // The logo matrix includes scale; use its unit quaternion so footage
+        // stays aligned with the chrome facets while the reveal is dragged.
+        _q1.copy(this.logo.quaternion);
         _s1.set(t.w * L.logoH * 1.015, t.h * L.logoH * 1.015, 1);
         _p0.lerp(_p1, m);
         _p0.z += Math.sin(Math.PI * m) * L.ringR * 0.12; // shallow lift toward the viewer
@@ -610,13 +675,13 @@ export class HeroScene {
   private updateUi(ph: Phases) {
     const { hint, markHit } = this.els;
     if (hint) {
-      const finished = ph.chrome >= 1 && this.p < T.turnEnd;
+      const finished = ph.chrome > 0 && this.p < T.turnEnd;
       hint.style.opacity = String(finished ? 1 : 1 - seg(this.p, 0.005, 0.05));
       const dragHint = hint.querySelector<HTMLElement>('.hero__hint-drag');
       if (dragHint) dragHint.textContent = finished ? 'Drag to rotate · Arrow keys to spin' : 'Drag to explore';
     }
-    // The mark can be hovered/grabbed once the chrome reveal has finished sweeping.
-    const active = ph.chrome >= 1 && this.p < T.turnEnd;
+    // Interact as soon as the first chrome appears, including during the shine.
+    const active = ph.chrome > 0 && this.p < T.turnEnd;
     this.markActive = active;
     if (active !== markHit.classList.contains('is-active')) {
       markHit.classList.toggle('is-active', active);
@@ -641,6 +706,7 @@ export class HeroScene {
   }
 
   destroy() {
+    this.viewer.destroy();
     cancelAnimationFrame(this.raf);
     this.videos.pauseAll();
     this.word.dispose();

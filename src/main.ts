@@ -31,6 +31,7 @@ void import('lenis').then(({ default: Lenis }) => {
     if (preference.matches) return;
     scrolling = new Lenis({ autoRaf: true, duration: 1.05, lerp: 0, smoothWheel: true, syncTouch: false, anchors: false });
     scrolling.on('scroll', ScrollTrigger.update);
+    if (document.documentElement.classList.contains('has-campaign-viewer')) scrolling.stop();
   };
   document.addEventListener('click', (event) => {
     if (!scrolling || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -45,6 +46,10 @@ void import('lenis').then(({ default: Lenis }) => {
     const top = hash === '#hero' ? 0 : target.getBoundingClientRect().top + window.scrollY;
     history.pushState(null, '', hash);
     scrolling.scrollTo(top);
+  });
+  document.addEventListener('campaign-viewer-change', event => {
+    if ((event as CustomEvent<{ open: boolean }>).detail.open) scrolling?.stop();
+    else scrolling?.start();
   });
   preference.addEventListener('change', sync);
   sync();

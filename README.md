@@ -41,3 +41,9 @@ clips should be muted 4:5 H.264 MP4 loops. The current files are generated stand
 - `prefers-reduced-motion`, or no WebGL2: no pin and no three.js download. You get the static wordmark plus the mark filled with posters.
 - Front-of-ring posters load first. At most 3 muted clips play, and video pauses when the hero is offscreen or the tab is hidden.
 - The compact brand navigation stays fixed at every width.
+
+## Campaign previews
+
+Click or tap any carousel card before assembly to lift it into a larger poster/video viewer. The orbit pauses and scrolling locks while open. Close with the backdrop, Close button or Escape to return the card to its original position. Videos have native playback controls and fall back to the poster if unavailable. Keyboard users can focus the carousel, select with Left/Right and preview with Enter/Space.
+
+The chrome mark can be dragged or rotated with arrow keys as soon as the metallic reveal begins. Input still settles before the full-screen zoom so the close-up stays facing forward.

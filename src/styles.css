@@ -403,3 +403,18 @@ h3 {
   .world-footer::after { background: linear-gradient(#fff 0%, rgb(255 255 255 / .97) 25%, rgb(255 255 255 / .68) 34%, transparent 48%, transparent 85%, rgb(15 30 19 / .6) 100%); }
 }
 @media (prefers-reduced-motion: reduce) { .world-footer__media video { transition: none; } }
+
+html.has-campaign-viewer, .has-campaign-viewer body { overflow: hidden; }
+.campaign-viewer {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: rgb(14 18 24 / calc(var(--viewer-dim) * .68)); color: white; overflow: hidden;
+  backdrop-filter: blur(calc(var(--viewer-dim) * 12px));
+  --viewer-dim: 0;
+}
+.campaign-viewer::backdrop { background: transparent; }
+.campaign-viewer__card { position: absolute; overflow: hidden; border-radius: 16px; box-shadow: 0 24px 100px rgb(0 0 0 / .25); transform-origin: center; background: #eef0f2; }
+.campaign-viewer__media, .campaign-viewer__media img, .campaign-viewer__media video { width: 100%; height: 100%; }
+.campaign-viewer__media img, .campaign-viewer__media video { position: absolute; inset: 0; object-fit: contain; }
+.campaign-viewer__close { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 24px; padding: 12px 20px; border: 1px solid rgb(255 255 255 / .3); border-radius: 999px; background: rgb(255 255 255 / .12); color: #fff; font: 500 14px var(--font); cursor: pointer; backdrop-filter: blur(10px); }
+.campaign-viewer__caption { position: absolute; bottom: max(22px, env(safe-area-inset-bottom)); left: 20px; right: 20px; margin: 0; font-size: 13px; text-align: center; pointer-events: none; }
+.campaign-viewer :focus-visible { outline-color: white; }
