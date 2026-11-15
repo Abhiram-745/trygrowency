@@ -55,7 +55,7 @@ void main() {
   float sa = uRes.x / uRes.y;
   vec2 c = uv - 0.5;
   if (sa > uTexAspect) c.y *= uTexAspect / sa; else c.x *= sa / uTexAspect;
-  vec3 col = uHasMap > 0.5 ? texture2D(map, c + 0.5).rgb : vec3(0.16, 0.06, 0.39);
+  vec3 col = uHasMap > 0.5 ? texture2D(map, c + 0.5).rgb : vec3(0.067, 0.067, 0.078);
 
   // bright lip on the opening edge while it widens
   float lip = smoothstep(0.035, 0.0, r - d) * (1.0 - smoothstep(0.85, 1.0, uOpen));

@@ -17,10 +17,6 @@ npm run build
 
 Review helpers: `?p=0.7` jumps to a point in the sequence; `?static` forces the static layout.
 
-## Ring media
-
-The ring and the media-filled mark use the real Growency spec ads, alternating with Growency's studio photography; everything is in **`src/content/campaigns.ts`** (`RING`). Slots marked `*` play a gentle motion loop of the ad (`npm run gen:ad-loops` rebuilds them into `public/media/campaigns/`). Each spec ad keeps its "Growency Spec · Not commissioned by …" note. Cards 1–6 fill the top blade, 7–12 the middle, 13–18 the lower blade.
-
 ## Brand files
 
 - `src/brand/mark.ts`: the mark's three facets, traced from the supplied logo and made exactly symmetric.
@@ -47,13 +43,16 @@ The chrome mark can be dragged or rotated with arrow keys as soon as the metalli
 
 ## The work section
 
-The hero's final zoom opens a window in the middle facet onto the spec-ad reel, then hands over to the full-screen reel that starts this section, followed by a bento grid. Copy and media come from trygrowency.com:
+The hero's final zoom opens a window in the middle facet onto the spec-ad reel, then hands over to the full-screen reel that starts this section. Below it, a services bento (strategy, creative, testing, budget, reporting, pricing, FAQ, clients). Copy comes from trygrowency.com; the example numbers are an illustrative campaign and are labelled as such.
 
 - `src/content/work.ts`: the 10 real spec ads (titles, alt text and their required "Growency Spec · Not commissioned by …" note), the reel and the booking link.
-- `public/media/work/`, `editorial/`, `icons/`, `clients/`: assets from the live site.
-- `scripts/gen-reel.py` → `public/media/reel/spec-reel.mp4`: rebuilds the reel from the spec ads (`python3 -I scripts/gen-reel.py`).
-- `src/work.ts`, `src/work.css`: reel choreography and bento behaviour.
+- `scripts/gen-reel.py` → `public/media/reel/spec-reel.mp4`: rebuilds the reel from the spec ads (`npm run gen:reel`).
+- `src/work.ts`, `src/work.css`: reel choreography and the services bento.
 
-## Footer video
+## Ring media
 
-`public/media/footer/`: desktop loop (full 10 s, river) and mobile loop (seconds 3–10 of the trees clip), with first-frame posters. Phones and screens ≤800px get the mobile loop.
+The ring and the media-filled mark use the real Growency spec ads; everything is in **`src/content/campaigns.ts`** (`RING`). Slots marked `*` play a gentle motion loop of the ad (`npm run gen:ad-loops`). Photos can be mixed in with `@file` slots: drop them in `public/media/photos/` and add their alt text to `PHOTOS`. Cards 1–6 fill the top blade, 7–12 the middle, 13–18 the lower blade.
+
+## Footer
+
+The footer is the responsive landscape photo (`public/images/footer-desktop.webp`, `footer-mobile.webp`).

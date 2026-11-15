@@ -2,8 +2,8 @@
 // Media for the homepage hero ring and the media-filled mark.
 // THIS IS THE ONE PLACE TO EDIT RING CARDS.
 //
-// The ring uses the real Growency spec ads (src/content/work.ts), alternating
-// with Growency's studio photography so the mark's mosaic can breathe. Slots with
+// The ring uses the real Growency spec ads (src/content/work.ts); photos can be
+// mixed in with `@` slots (see PHOTOS). Slots with
 // `video` play a gentle motion loop of the ad (scripts/gen-ad-loops.py); only a
 // few play at once and the rest show their still.
 //
@@ -31,41 +31,32 @@ export interface Campaign {
 }
 
 const LOOPS = `${import.meta.env.BASE_URL}media/campaigns/`;
-const EDITORIAL = `${import.meta.env.BASE_URL}media/editorial/`;
+const PHOTO_DIR = `${import.meta.env.BASE_URL}media/photos/`;
 
-/** Growency's own studio photography (from trygrowency.com), used between ads. */
-const STUDIO: Record<string, string> = {
-  strategy: 'A team at their desks in front of a pinned-up planning wall, in a glass office washed in blue and violet light.',
-  meeting: 'Overhead view of a small team meeting around a round table, seen through glass in blue and violet light.',
-  call: 'A person on a headset call at a desk, looking out over a city skyline at dusk.',
-  conversation: 'A wide curved atrium with people walking across it, blurred with motion.',
-  outreach: 'People working on laptops in an open-plan office, softly blurred in blue light.',
-  leads: 'A crowd crossing a large plaza, seen from above and blurred with motion.',
-};
+/** Optional photos to mix into the ring: file name (in public/media/photos/) → alt text. */
+const PHOTOS: Record<string, string> = {};
 
 /**
- * Slot → content. Two ads, then a studio photo, around the ring, so the mark's
- * mosaic has breathing room. `*` = plays the ad's motion loop; `@` = studio photo.
- * The two repeated ads sit directly opposite each other on the ring.
+ * Slot → content. `*` = plays the ad's motion loop; `@name` = a photo from
+ * PHOTOS (e.g. stock imagery). Slot k and slot k + 9 sit directly opposite each
+ * other on the ring, so a repeated ad never lands beside its twin in the mark.
  */
 const RING = [
-  'aside', 'wispr-flow*', '@strategy',
-  'ikea', 'granola*', '@meeting',
-  'moonshot-bring-flowers', 'sandwich*', '@call',
-  'moonshot-for-everything', 'allbirds*', '@conversation',
-  'instinct*', 'moonshot-good-memory*', '@outreach',
-  'moonshot-bring-flowers', 'sandwich', '@leads',
+  'aside', 'wispr-flow*', 'ikea', 'moonshot-bring-flowers', 'granola*', 'allbirds',
+  'instinct*', 'sandwich*', 'moonshot-for-everything',
+  'moonshot-good-memory*', 'wispr-flow', 'ikea', 'moonshot-bring-flowers', 'granola', 'allbirds*',
+  'instinct', 'sandwich', 'moonshot-for-everything',
 ];
 
 export const CAMPAIGNS: Campaign[] = RING.map((slot, i) => {
   if (slot.startsWith('@')) {
     const name = slot.slice(1);
     return {
-      id: `studio-${name}`,
-      title: 'Inside Growency',
-      client: 'Growency studio',
-      poster: `${EDITORIAL}${name}.webp`,
-      alt: STUDIO[name],
+      id: `photo-${name}`,
+      title: 'Growency',
+      client: 'Growency',
+      poster: `${PHOTO_DIR}${name}`,
+      alt: PHOTOS[name] ?? '',
       placeholder: false,
     };
   }

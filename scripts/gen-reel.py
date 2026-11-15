@@ -2,8 +2,7 @@
 
 Run:  python3 -I scripts/gen-reel.py
 Writes public/media/reel/spec-reel.mp4 (+ poster .jpg). The ten spec ads
-(public/media/work/) glide across a deep brand-purple field with a slow light
-sweep. The loop is seamless: the strip advances exactly one period.
+(public/media/work/) glide across a neutral charcoal field with a slow, soft light. The loop is seamless: the strip advances exactly one period.
 """
 import math
 import os
@@ -36,10 +35,10 @@ def lerp(a, b, t):
 
 
 def background():
-    """Brand night gradient with a soft blue → violet glow."""
+    """Neutral charcoal gradient (no brand colour, so the ads carry the colour)."""
     img = Image.new("RGB", (W, H))
     px = img.load()
-    top, bottom = (12, 4, 38), (41, 16, 100)
+    top, bottom = (17, 17, 20), (34, 34, 38)
     for y in range(H):
         c = lerp(top, bottom, (y / H) ** 1.4)
         for x in range(W):
@@ -72,7 +71,7 @@ def card(path):
 def shadow():
     pad = 80
     s = Image.new("RGBA", (CARD_W + pad * 2, CARD_H + pad * 2), (0, 0, 0, 0))
-    ImageDraw.Draw(s).rounded_rectangle((pad, pad + 24, pad + CARD_W, pad + CARD_H + 24), RADIUS, fill=(4, 0, 20, 170))
+    ImageDraw.Draw(s).rounded_rectangle((pad, pad + 24, pad + CARD_W, pad + CARD_H + 24), RADIUS, fill=(0, 0, 0, 150))
     return s.filter(ImageFilter.GaussianBlur(34)), pad
 
 
@@ -96,8 +95,8 @@ def main():
         frame = base.copy().convert("RGBA")
         # light that drifts in a closed loop (seamless)
         a = t * math.tau
-        frame = Image.alpha_composite(frame, glow_layer(int(W * (0.5 + 0.32 * math.cos(a))), int(H * (0.42 + 0.12 * math.sin(a * 2))), 420, (60, 146, 248), 70))
-        frame = Image.alpha_composite(frame, glow_layer(int(W * (0.5 - 0.3 * math.cos(a))), int(H * (0.7 - 0.1 * math.sin(a))), 360, (132, 92, 255), 60))
+        frame = Image.alpha_composite(frame, glow_layer(int(W * (0.5 + 0.32 * math.cos(a))), int(H * (0.42 + 0.12 * math.sin(a * 2))), 420, (255, 255, 255), 26))
+        frame = Image.alpha_composite(frame, glow_layer(int(W * (0.5 - 0.3 * math.cos(a))), int(H * (0.7 - 0.1 * math.sin(a))), 360, (255, 244, 230), 22))
         offset = t * period
         x = -offset - CARD_W
         while x < W + CARD_W:

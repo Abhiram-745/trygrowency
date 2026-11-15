@@ -181,7 +181,7 @@ h3 {
 .hero__stage {
   position: relative;
   height: 100vh;
-  height: 100svh;
+  height: 100lvh; /* large viewport: no gap when the mobile address bar hides */
   min-height: 520px;
   overflow: hidden;
   touch-action: pan-y;
