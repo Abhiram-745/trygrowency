@@ -6,7 +6,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "gen:wordmark": "node scripts/build-wordmark.mjs",
-    "gen:placeholders": "python3 -I scripts/gen-placeholders.py"
+    "gen:reel": "python3 -I scripts/gen-reel.py",
+    "gen:ad-loops": "python3 -I scripts/gen-ad-loops.py"
   },
   "repository": {
     "type": "git",

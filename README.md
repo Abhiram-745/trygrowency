@@ -17,12 +17,9 @@ npm run build
 
 Review helpers: `?p=0.7` jumps to a point in the sequence; `?static` forces the static layout.
 
-## Replacing placeholder media
+## Ring media
 
-All card media is listed in **`src/content/campaigns.ts`** (poster, video, alt, title, client, link).
-Drop files into **`public/media/campaigns/`**, update the entries and set `placeholder: false`.
-Cards 1–6 fill the top facet, 7–12 the lower facet and 13–18 the left facet. Posters should be 4:5 JPG/WebP;
-clips should be muted 4:5 H.264 MP4 loops. The current files are generated stand-ins (`npm run gen:placeholders`).
+The ring and the media-filled mark use the real Growency spec ads, alternating with Growency's studio photography; everything is in **`src/content/campaigns.ts`** (`RING`). Slots marked `*` play a gentle motion loop of the ad (`npm run gen:ad-loops` rebuilds them into `public/media/campaigns/`). Each spec ad keeps its "Growency Spec · Not commissioned by …" note. Cards 1–6 fill the top blade, 7–12 the middle, 13–18 the lower blade.
 
 ## Brand files
 

@@ -10,15 +10,16 @@
   --coral: #ff806b;
   --coral-hover: #ff9a88;
   --paper: #fffefb;
-  --muted: rgb(255 254 251 / 0.62);
-  --tile: #120c2b;
-  --tile-line: rgb(255 255 255 / 0.08);
+  --muted: rgb(255 254 251 / 0.66);
+  --ink-muted: #63636b;
+  --tile: #f5f4f0;
+  --tile-line: rgb(17 17 20 / 0.06);
   --serif: 'Instrument Serif', Georgia, serif;
   --brand-gradient: linear-gradient(120deg, #28a4fd 0%, #457fea 25%, #5263f1 42%, #5028bf 60%, #300a6f 80%, #0e032b 100%);
   position: relative;
   z-index: 1;
-  background: var(--night);
-  color: var(--paper);
+  background: var(--bg);
+  color: var(--ink);
 }
 .work em {
   font-family: var(--serif);
@@ -58,6 +59,7 @@
 .reel__sticky {
   position: sticky;
   top: 0;
+  background: var(--night);
   height: 100vh;
   height: 100svh;
   overflow: hidden;
@@ -85,6 +87,7 @@
 }
 .reel__copy {
   position: absolute;
+  color: var(--paper);
   left: clamp(20px, 6vw, 96px);
   right: clamp(20px, 6vw, 96px);
   bottom: clamp(72px, 13vh, 150px);
@@ -98,7 +101,11 @@
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--coral);
+  color: var(--ink-muted);
+}
+.reel__copy .eyebrow,
+.tile--dark .tile__eyebrow {
+  color: rgb(255 254 251 / 0.78);
 }
 .reel__title {
   margin: 0;
@@ -137,6 +144,10 @@
   font-size: 11px;
   letter-spacing: 0.02em;
   color: rgb(255 254 251 / 0.55);
+  transition: color 0.4s;
+}
+.reel.is-framed .reel__note {
+  color: var(--ink-muted);
 }
 
 .pill {
@@ -153,12 +164,19 @@
 .pill:active {
   transform: scale(0.97);
 }
-.pill--coral {
-  background: var(--coral);
-  color: #271333;
+.pill--ink {
+  background: var(--ink);
+  color: #fff;
 }
-.pill--coral:hover {
-  background: var(--coral-hover);
+.pill--ink:hover {
+  background: #2a2b31;
+}
+.pill--light {
+  background: #fff;
+  color: var(--ink);
+}
+.pill--light:hover {
+  background: rgb(255 255 255 / 0.86);
 }
 .pill--ghost {
   color: var(--paper);
@@ -201,6 +219,7 @@
   border-radius: 26px;
   background: var(--tile);
   box-shadow: inset 0 0 0 1px var(--tile-line);
+  color: var(--ink);
   opacity: 0;
   transform: translateY(36px) scale(0.985);
   transition:
@@ -221,8 +240,20 @@
   border-radius: inherit;
   opacity: 0;
   transition: opacity 0.4s;
+  background: radial-gradient(420px circle at var(--mx) var(--my), rgb(255 255 255 / 0.9), transparent 60%);
+  mix-blend-mode: soft-light;
+  box-shadow: inset 0 0 0 1px rgb(17 17 20 / 0.1);
+}
+.tile--dark {
+  color: var(--paper);
+}
+.tile--dark::after {
+  mix-blend-mode: normal;
   background: radial-gradient(420px circle at var(--mx) var(--my), rgb(255 255 255 / 0.12), transparent 60%);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+.tile:hover {
+  box-shadow: inset 0 0 0 1px var(--tile-line), 0 30px 60px -36px rgb(17 17 20 / 0.28);
 }
 .tile:hover::after {
   opacity: 1;
@@ -252,7 +283,7 @@
 .tile__fine {
   margin: 0;
   font-size: 12px;
-  color: rgb(255 254 251 / 0.5);
+  color: var(--ink-muted);
 }
 
 /* feature ad */
@@ -388,12 +419,12 @@
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: rgb(255 255 255 / 0.1);
+  background: rgb(17 17 20 / 0.07);
   font-weight: 650;
 }
 .bar__label {
   grid-area: label;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 .bar b {
   grid-area: value;
@@ -403,7 +434,7 @@
   grid-area: track;
   height: 10px;
   border-radius: 9px;
-  background: rgb(255 255 255 / 0.07);
+  background: rgb(17 17 20 / 0.07);
   overflow: hidden;
 }
 .bar__fill {
@@ -411,7 +442,7 @@
   height: 100%;
   width: calc(var(--v) * 100%);
   border-radius: inherit;
-  background: rgb(255 255 255 / 0.45);
+  background: rgb(17 17 20 / 0.3);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 1.4s cubic-bezier(.2,.7,.2,1) 0.3s;
@@ -429,10 +460,10 @@
 .tile__result {
   margin: auto 0 0;
   font-size: 15px;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 .tile__result strong {
-  color: var(--paper);
+  color: var(--ink);
 }
 
 /* workflow */
@@ -465,10 +496,16 @@
 }
 .flow li.is-on {
   opacity: 1;
-  background: rgb(255 255 255 / 0.06);
+  background: #fff;
+  box-shadow: 0 10px 30px -18px rgb(17 17 20 / 0.35);
 }
 .flow img {
-  filter: drop-shadow(0 6px 14px rgb(40 164 253 / 0.35));
+  box-sizing: content-box;
+  padding: 5px;
+  border-radius: 11px;
+  background: var(--ink);
+  width: 24px;
+  height: 24px;
 }
 .flow b {
   display: block;
@@ -481,7 +518,7 @@
   overflow: hidden;
   font-size: 13px;
   line-height: 1.4;
-  color: var(--muted);
+  color: var(--ink-muted);
   transition: max-height 0.5s ease, margin 0.5s ease;
 }
 .flow li.is-on span {
@@ -538,7 +575,7 @@
 }
 .ad:hover,
 .ad:focus-within {
-  box-shadow: 0 30px 60px -20px rgb(40 164 253 / 0.45);
+  box-shadow: 0 30px 60px -24px rgb(17 17 20 / 0.45);
 }
 .ad img {
   width: 100%;
@@ -604,14 +641,14 @@
   min-height: 112px;
   padding: 10px;
   border-radius: 16px;
-  background: rgb(255 255 255 / 0.04);
+  background: var(--ink);
   color: var(--paper);
   text-align: center;
   text-decoration: none;
   transition: background-color 0.3s, transform 0.3s;
 }
 .clients a:hover {
-  background: rgb(255 255 255 / 0.1);
+  background: #26262d;
   transform: translateY(-3px);
 }
 .clients__posting {
@@ -643,30 +680,32 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 18px;
-  background: linear-gradient(140deg, #1b1046, #120c2b 60%);
+  background: #fff;
 }
 .price {
   margin: 0;
   font-size: clamp(22px, 2.1vw, 30px);
   line-height: 1.12;
   letter-spacing: -0.03em;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 .price strong {
   display: block;
   font-size: clamp(44px, 4.6vw, 68px);
   font-weight: 560;
   letter-spacing: -0.05em;
-  color: var(--paper);
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 .tile__link {
-  color: var(--coral);
+  color: var(--ink);
   font-weight: 600;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 .tile__link:hover {
-  color: var(--coral-hover);
+  text-decoration-thickness: 2px;
 }
 
 /* CTA */
@@ -724,7 +763,7 @@
     bottom: 64px;
   }
   .reel__title {
-    font-size: 9.2vw;
+    font-size: 8.1vw;
   }
   .reel__note {
     left: 16px;

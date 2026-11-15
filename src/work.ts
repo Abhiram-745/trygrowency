@@ -168,6 +168,8 @@ export function initWork(motion: boolean) {
 
   if (!motion || !reel) return;
   const frame = reel.querySelector<HTMLElement>('[data-reel-frame]')!;
+  const sticky = reel.querySelector<HTMLElement>('.reel__sticky')!;
+  const page = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff';
   const shade = reel.querySelector<HTMLElement>('[data-reel-shade]')!;
   const copy = reel.querySelector<HTMLElement>('[data-reel-copy]')!;
   const lines = copy.querySelectorAll<HTMLElement>('.reel__line > span');
@@ -176,7 +178,14 @@ export function initWork(motion: boolean) {
   gsap.set(rest, { opacity: 0, y: 24 });
   gsap
     .timeline({
-      scrollTrigger: { trigger: reel, start: 'top top', end: 'bottom bottom', scrub: 0.6, refreshPriority: -1 },
+      scrollTrigger: {
+        trigger: reel,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 0.6,
+        refreshPriority: -1,
+        onUpdate: (self) => reel.classList.toggle('is-framed', self.progress > 0.8),
+      },
       defaults: { ease: 'none' },
     })
     // Breathe on the full-bleed reel for a beat, then darken and rise the headline.
@@ -191,6 +200,8 @@ export function initWork(motion: boolean) {
       { clipPath: 'inset(0% 0% 0% 0% round 0px)' },
       { clipPath: 'inset(7% 3.5% 7% 3.5% round 30px)', duration: 0.3, ease: 'power2.inOut' },
       0.68,
-    );
+    )
+    // …and the page around it brightens to match the rest of the landing.
+    .to(sticky, { backgroundColor: page, duration: 0.3, ease: 'power2.inOut' }, 0.68);
   ScrollTrigger.refresh();
 }
