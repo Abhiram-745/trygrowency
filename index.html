@@ -59,7 +59,32 @@
         </div>
       </section>
 
+      <section class="content-placeholder" id="content" aria-labelledby="content-title">
+        <div class="content-placeholder__sticky"><h2 id="content-title">Content</h2></div>
+      </section>
     </main>
+
+    <footer class="landscape-footer" aria-label="Growency footer">
+      <canvas class="landscape-footer__texture" data-footer-texture aria-hidden="true"></canvas>
+      <div class="landscape-footer__top">
+        <div class="landscape-footer__intro">
+          <a class="landscape-footer__brand" href="#hero" aria-label="Growency home">
+            <svg data-footer-mark aria-hidden="true"></svg><span>growency<span class="brand-dot">.</span></span>
+          </a>
+          <p>The only growth agency you’ll ever need.<br>Strategy, creative and performance,<br>under one roof.</p>
+          <div class="landscape-footer__socials" aria-label="Social platforms">
+            <a href="https://www.instagram.com/" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17" cy="7" r=".8" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://www.tiktok.com/" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 4v11a4 4 0 1 1-4-4M14 4c0 4 3 5 5 5"/></svg></a>
+          </div>
+        </div>
+        <div class="landscape-footer__columns">
+          <div><h3>Services</h3><ul><li>Strategy</li><li>Creative</li><li>Performance</li><li>Campaigns</li></ul></div>
+          <div><h3>Studio</h3><ul><li>Growency</li><li>Our approach</li><li>Our people</li><li>Our story</li></ul></div>
+          <nav aria-label="Footer"><h3>Explore</h3><ul><li><a href="#hero">Back to top</a></li><li><a href="#content">Content</a></li></ul></nav>
+        </div>
+      </div>
+      <div class="landscape-footer__bottom"><p>© 2026 Growency. Made for brands ready to grow.</p><p>Strategy. Creative. Performance.</p></div>
+    </footer>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

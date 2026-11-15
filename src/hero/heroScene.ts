@@ -402,16 +402,10 @@ export class HeroScene {
     const { logoCenter, logoH } = this.L;
     const c = ph.chrome;
     const zoom = easeInOut(ph.zoom);
-    // Rotation starts with the first metallic reflection and settles before
-    // the final push, so the camera travels into a broad face of silver.
-    const turn = smooth(seg(this.p, T.chromeStart, T.zoomStart));
-    const tilt = Math.sin(turn * Math.PI);
+    // Keep the media-filled mark facing forward throughout the reveal.
+    // Only the studio reflection travels; the cards never turn edge-on.
     const scale = logoH * Math.exp(zoom * Math.log(75));
-    this.logo.rotation.set(
-      tilt * 0.22 + this.rotX * (1 - zoom),
-      -turn * TAU + tilt * 0.30 + this.rotY * (1 - zoom),
-      tilt * -0.08,
-    );
+    this.logo.rotation.set(this.rotX * (1 - zoom), this.rotY * (1 - zoom), 0);
     this.logo.scale.setScalar(scale);
     // Aim at the interior of the middle facet, avoiding the gaps between blades.
     const focus = new THREE.Vector3(-0.22, 0, 0).applyEuler(this.logo.rotation);
@@ -419,8 +413,8 @@ export class HeroScene {
     this.logo.position.addScaledVector(focus, -scale * zoom);
     this.logo.updateMatrixWorld(true);
 
-    const sweep = lerp(-0.2, 1.2, easeInOut(seg(c, 0.0, 0.72)));
-    const glint = lerp(-0.4, 1.5, seg(c, 0.35, 1));
+    const sweep = lerp(-0.2, 1.2, smooth(c));
+    const glint = lerp(-0.4, 1.5, smooth(seg(c, 0.30, 1)));
     const depth = easeOut(seg(c, 0.05, 0.65));
     this.chrome.update(sweep, glint, depth, 0, this.hover.v);
   }
@@ -604,7 +598,7 @@ export class HeroScene {
     const { hint, markHit } = this.els;
     if (hint) hint.style.opacity = String(1 - seg(this.p, 0.005, 0.05));
     // The mark can be hovered/grabbed once the chrome reveal has finished sweeping.
-    const active = ph.chrome > 0.62 && ph.zoom < 0.01;
+    const active = ph.chrome >= 1 && ph.zoom < 0.01;
     this.markActive = active;
     if (active !== markHit.classList.contains('is-active')) {
       markHit.classList.toggle('is-active', active);

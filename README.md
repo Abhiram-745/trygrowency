@@ -6,8 +6,8 @@ Vite + TypeScript site. The homepage hero is a scroll-scrubbed WebGL sequence
 1. **Opening:** the plain black **growency** wordmark sits above a raised, draggable orbit of campaign cards. The tagline is hidden.
 2. **Clear the stage:** the wordmark erodes completely before the tagline appears. A liquid-silver lighting reveal travels across its fixed-weight letters; there is no idle or cursor-driven weight animation.
 3. **Snap and dissolve:** the tagline holds for reading, makes a brief mechanical snap, then breaks into silver fragments as the carousel opens and assembles into the logo.
-4. **Chrome rotation:** a reflection replaces the footage with bevelled chrome as the mark rotates through a full turn. It stays metallic.
-5. **Immersive finish:** the final scroll pushes into the middle facet until silver fills the viewport. The sequence spans 9.5 viewport heights; there are no sections below it.
+4. **Chrome reflection:** a reflection replaces the footage with bevelled chrome while the assembled mark stays facing forward. It stays metallic.
+5. **Immersive finish:** the final scroll pushes into the middle facet until silver fills the viewport. The sequence spans 12 viewport heights. Navigation fades away before the immersive zoom. A short Content scroll interval leads into a cream footer with an original landscape and a lazy-loaded ASCII overprint.
 
 ```bash
 npm install

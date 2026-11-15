@@ -2,7 +2,7 @@
 // All phase boundaries live here so timing can be tuned in one place.
 
 /** How long the hero stays pinned, in viewport heights of scrolling. */
-export const PIN_LENGTH_VH = 9.5;
+export const PIN_LENGTH_VH = 12;
 
 export const T = {
   // 1. Plain black wordmark erodes completely before the tagline appears.
@@ -21,12 +21,12 @@ export const T = {
   flyStart: 0.45,
   flyEnd: 0.68,
   // 3b. Briefly hold the assembled video-filled mark.
-  chromeStart: 0.71,
-  // 4. Chrome reveal and rotation.
-  chromeEnd: 0.86,
+  chromeStart: 0.70,
+  // 4. Slow, front-facing chrome reveal.
+  chromeEnd: 0.88,
   // 5. Push into a metallic facet until it fills the viewport.
-  zoomStart: 0.89,
-  zoomEnd: 1.0,
+  zoomStart: 0.91,
+  zoomEnd: 0.995,
 };
 
 export const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
