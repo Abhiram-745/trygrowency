@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CAMPAIGNS } from './content/campaigns';
 import { buildStaticMark, fillMarkIcon } from './hero/staticHero';
 import { PIN_LENGTH_VH, T, seg } from './hero/timeline';
+import { initWork } from './work';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,10 +66,15 @@ function webglAvailable() {
 }
 
 if (!reduceMotion && !forceStatic && webglAvailable()) {
-  initMotion().catch((err) => {
-    console.error('Hero animation failed, using static layout', err);
-    $('[data-hero]').classList.remove('is-gl');
-  });
+  initMotion()
+    .catch((err) => {
+      console.error('Hero animation failed, using static layout', err);
+      $('[data-hero]').classList.remove('is-gl');
+    })
+    // The work section measures its scroll positions after the hero pin exists.
+    .finally(() => initWork(!reduceMotion));
+} else {
+  initWork(!reduceMotion);
 }
 
 async function initMotion() {

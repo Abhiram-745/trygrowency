@@ -10,6 +10,7 @@ import { CampaignViewer, type CardBounds } from './campaignViewer';
 import { ChromeMark } from './chromeMark';
 import { PosterLoader, VideoPool } from './media';
 import { RingText } from './ringText';
+import { Portal } from './portal';
 import { assignTiles, type Tile } from './tiles';
 import { clamp01, easeInOut, easeOut, lerp, T, phases, seg, smooth, type Phases } from './timeline';
 import { WordmarkFx } from './wordmarkFx';
@@ -82,6 +83,7 @@ export class HeroScene {
   private leaveRank: number[] = [];
   private blobs: BlobState[];
   private chrome: ChromeMark;
+  private portal!: Portal;
   private tagline = new RingText();
   private word = new WordmarkFx();
   private posters: PosterLoader;
@@ -140,6 +142,9 @@ export class HeroScene {
 
     this.chrome = new ChromeMark(this.renderer, this.scene);
     this.logo.add(this.chrome.root);
+    // Window in the middle facet that the final zoom flies through.
+    this.portal = new Portal(document.querySelector<HTMLVideoElement>('[data-reel-video]'));
+    this.logo.add(this.portal.mesh);
     this.scene.add(this.logo);
     this.ui.add(this.word.group);
 
@@ -188,6 +193,7 @@ export class HeroScene {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(w, h, false);
+    this.portal?.setResolution(w * dpr, h * dpr);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.uiCam.right = w;
@@ -496,6 +502,12 @@ export class HeroScene {
     // As the push-in magnifies the reflections into blurry bands, flatten the
     // surface to one constant colour so the zoom lands cleanly.
     this.chrome.setFill(smooth(seg(ph.zoom, 0.28, 0.72)));
+    // The middle facet opens into a window onto the spec-ad reel, which fills
+    // the screen as the zoom completes; then the hero hands over to the DOM
+    // reel underneath (identical frame), and the canvas steps aside.
+    this.portal.setFocus(-0.22, 0);
+    this.portal.update(smooth(seg(ph.zoom, 0.04, 0.5)));
+    this.els.hero.classList.toggle('is-through', this.p >= T.zoomEnd - 0.0015);
   }
 
   private updateCards(ph: Phases, intro: number, dt: number) {

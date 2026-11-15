@@ -47,3 +47,16 @@ clips should be muted 4:5 H.264 MP4 loops. The current files are generated stand
 Click or tap any carousel card before assembly to lift it into a larger poster/video viewer. The orbit pauses and scrolling locks while open. Close with the backdrop, Close button or Escape to return the card to its original position. Videos have native playback controls and fall back to the poster if unavailable. Keyboard users can focus the carousel, select with Left/Right and preview with Enter/Space.
 
 The chrome mark can be dragged or rotated with arrow keys as soon as the metallic reveal begins. Input still settles before the full-screen zoom so the close-up stays facing forward.
+
+## The work section
+
+The hero's final zoom opens a window in the middle facet onto the spec-ad reel, then hands over to the full-screen reel that starts this section, followed by a bento grid. Copy and media come from trygrowency.com:
+
+- `src/content/work.ts`: the 10 real spec ads (titles, alt text and their required "Growency Spec · Not commissioned by …" note), the reel and the booking link.
+- `public/media/work/`, `editorial/`, `icons/`, `clients/`: assets from the live site.
+- `scripts/gen-reel.py` → `public/media/reel/spec-reel.mp4`: rebuilds the reel from the spec ads (`python3 -I scripts/gen-reel.py`).
+- `src/work.ts`, `src/work.css`: reel choreography and bento behaviour.
+
+## Footer video
+
+`public/media/footer/`: desktop loop (full 10 s, river) and mobile loop (seconds 3–10 of the trees clip), with first-frame posters. Phones and screens ≤800px get the mobile loop.
