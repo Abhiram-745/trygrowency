@@ -2,7 +2,7 @@
 // All phase boundaries live here so timing can be tuned in one place.
 
 /** How long the hero stays pinned, in viewport heights of scrolling. */
-export const PIN_LENGTH_VH = 14;
+export const PIN_LENGTH_VH = 10;
 
 export const T = {
   // 1. Plain black wordmark erodes completely before the tagline appears.
@@ -23,7 +23,7 @@ export const T = {
   // 3b. Briefly hold the assembled video-filled mark.
   chromeStart: 0.70,
   // 4. Slow, front-facing chrome reveal.
-  chromeEnd: 0.88,
+  chromeEnd: 0.80,
   // One turn, a separate settle interval, then a rotation-free zoom.
   turnEnd: 0.915,
   settleEnd: 0.928,

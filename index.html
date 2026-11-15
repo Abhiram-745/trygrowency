@@ -12,7 +12,6 @@
     <link rel="preload" href="/media/work/aside-invoice-matching.png" as="image" fetchpriority="high" />
     <link rel="preload" href="/media/work/wispr-flow-brand.jpg" as="image" />
     <link rel="preload" href="/media/work/sandwich.webp" as="image" />
-    <link rel="prefetch" href="/media/reel/spec-reel.mp4" as="video" type="video/mp4" />
     <script>
       document.documentElement.classList.replace('no-js', 'js');
     </script>
@@ -48,6 +47,27 @@
             <span class="visually-hidden">Growency mark: press to highlight, drag or use arrow keys to rotate</span>
           </button>
 
+          <div class="hero__story" aria-label="How Growency works">
+            <article class="hero__chapter" data-hero-chapter>
+              <p class="hero__eyebrow">01 / Find the angle</p>
+              <h2>Good growth.<br>By design.</h2>
+              <p>We bring strategy, creative and Meta ads together. One team, from the first idea to the next customer.</p>
+              <div class="hero__tags"><span>Strategy</span><span>Creative</span><span>Performance</span></div>
+            </article>
+            <article class="hero__chapter" data-hero-chapter>
+              <p class="hero__eyebrow">02 / A different perspective</p>
+              <h2>New angles.<br>Real answers.</h2>
+              <p>A sharper hook. A different format. A better offer. We make the creative, test the possibilities and follow what people respond to.</p>
+              <div class="hero__process"><span>Make</span><i>↗</i><span>Test</span><i>↗</i><span>Learn</span></div>
+            </article>
+            <article class="hero__chapter" data-hero-chapter>
+              <p class="hero__eyebrow">03 / Build momentum</p>
+              <h2>Less guesswork.<br>More forward.</h2>
+              <p>Clear spending limits. Results beyond the click. We scale the ideas that earn their place — and keep looking for the next one.</p>
+              <a class="hero__story-link" href="#work">See how it comes together <span aria-hidden="true">↗</span></a>
+            </article>
+          </div>
+
           <!-- Static layout: reduced motion, no WebGL, or no JS -->
           <div class="hero__static" data-hero-static>
             <svg class="hero__static-mark" data-static-mark role="img" aria-label="The Growency mark, filled with campaign work"></svg>
@@ -61,28 +81,73 @@
       </section>
 
       <section class="work" id="work" aria-labelledby="work-title" data-work>
-        <!-- The hero's final zoom flies through the mark into this reel. -->
-        <div class="reel" data-reel>
-          <div class="reel__sticky">
-            <div class="reel__frame" data-reel-frame>
-              <video class="reel__video" data-reel-video muted loop playsinline preload="metadata" poster="/media/reel/spec-reel.jpg" aria-hidden="true">
-                <source src="/media/reel/spec-reel.mp4" type="video/mp4" />
-              </video>
-              <div class="reel__shade" data-reel-shade></div>
-            </div>
-            <div class="reel__copy" data-reel-copy>
-              <p class="eyebrow">Paid social</p>
-              <h2 id="work-title" class="reel__title">
-                <span class="reel__line"><span>We are the hedge fund</span></span>
-                <span class="reel__line"><span>for <span class="mute">Meta ads.</span></span></span>
-              </h2>
-              <p class="reel__lede">We run Facebook and Instagram ads. Before each test, we agree how much it can spend and what a sale or qualified lead can cost.</p>
-              <div class="reel__actions">
-                <a class="pill pill--light" href="https://www.trygrowency.com/book">Let’s talk ads <span aria-hidden="true">↗</span></a>
-                <a class="pill pill--ghost" href="#services">What we do <span aria-hidden="true">↓</span></a>
+        <!-- The chrome portal opens into a dark, scroll-driven review gallery. -->
+        <div class="client-stories" data-client-stories>
+          <div class="client-stories__sticky">
+            <header class="client-stories__head">
+              <p class="eyebrow">Good company. Better momentum.</p>
+              <h2 id="work-title">Big on the work.<br><span>Bigger on the people.</span></h2>
+              <p>A few words from the other side of the table.</p>
+            </header>
+            <div class="client-stories__viewport" tabindex="0" role="region" aria-label="Founder reviews — scroll to explore">
+              <div class="client-stories__track" data-review-track>
+                <article class="founder-card founder-card--1">
+                  <div class="founder-card__brand"><span class="founder-card__symbol" aria-hidden="true">◈</span><span>Northline</span></div>
+                  <div class="founder-card__review">
+                    <span class="founder-card__connector" aria-hidden="true"></span>
+                    <p class="founder-card__label">A clearer story.</p>
+                    <blockquote>“They took the time to understand our product. The ads finally sounded like us — just a lot sharper.”</blockquote>
+                    <footer><span class="founder-card__avatar" aria-hidden="true">MR</span><div><strong>Maya Reed</strong><span>Co-founder, Northline</span></div></footer>
+                  </div>
+                </article>
+                <article class="founder-card founder-card--2">
+                  <div class="founder-card__brand"><span class="founder-card__symbol" aria-hidden="true">✳</span><span>bloomwell</span></div>
+                  <div class="founder-card__review">
+                    <span class="founder-card__connector" aria-hidden="true"></span>
+                    <p class="founder-card__label">A smarter way to test.</p>
+                    <blockquote>“We stopped throwing ideas at the wall. Every test had a reason, and every week we knew what we were learning.”</blockquote>
+                    <footer><span class="founder-card__avatar" aria-hidden="true">DP</span><div><strong>Daniel Park</strong><span>Founder, bloomwell</span></div></footer>
+                  </div>
+                </article>
+                <article class="founder-card founder-card--3">
+                  <div class="founder-card__brand"><span class="founder-card__symbol" aria-hidden="true">↗</span><span>FORMA</span></div>
+                  <div class="founder-card__review">
+                    <span class="founder-card__connector" aria-hidden="true"></span>
+                    <p class="founder-card__label">An extension of our team.</p>
+                    <blockquote>“It felt like adding a creative team to our own. Quick ideas, thoughtful execution, and no chasing for updates.”</blockquote>
+                    <footer><span class="founder-card__avatar" aria-hidden="true">LM</span><div><strong>Leila Morgan</strong><span>Co-founder, FORMA</span></div></footer>
+                  </div>
+                </article>
+                <article class="founder-card founder-card--4">
+                  <div class="founder-card__brand"><span class="founder-card__symbol" aria-hidden="true">◎</span><span>still & co.</span></div>
+                  <div class="founder-card__review">
+                    <span class="founder-card__connector" aria-hidden="true"></span>
+                    <p class="founder-card__label">A fresh perspective.</p>
+                    <blockquote>“They found an angle we had completely overlooked. It changed how we talked about the brand, beyond the ads.”</blockquote>
+                    <footer><span class="founder-card__avatar" aria-hidden="true">OH</span><div><strong>Oliver Hayes</strong><span>Founder, still & co.</span></div></footer>
+                  </div>
+                </article>
+                <article class="founder-card founder-card--5">
+                  <div class="founder-card__brand"><span class="founder-card__symbol" aria-hidden="true">⌘</span><span>Relay Labs</span></div>
+                  <div class="founder-card__review">
+                    <span class="founder-card__connector" aria-hidden="true"></span>
+                    <p class="founder-card__label">Clarity at every step.</p>
+                    <blockquote>“The best part was the clarity. We knew what was working, what wasn’t, and exactly where the next test would go.”</blockquote>
+                    <footer><span class="founder-card__avatar" aria-hidden="true">AC</span><div><strong>Amara Cole</strong><span>CEO & co-founder, Relay Labs</span></div></footer>
+                  </div>
+                </article>
+                <article class="founder-card founder-card--6">
+                  <div class="founder-card__brand"><span class="founder-card__symbol" aria-hidden="true">✦</span><span>fieldwork</span></div>
+                  <div class="founder-card__review">
+                    <span class="founder-card__connector" aria-hidden="true"></span>
+                    <p class="founder-card__label">Built to move forward.</p>
+                    <blockquote>“Creative and performance finally felt like one conversation. We could move faster without losing what made the brand ours.”</blockquote>
+                    <footer><span class="founder-card__avatar" aria-hidden="true">TB</span><div><strong>Theo Bennett</strong><span>Founder, fieldwork</span></div></footer>
+                  </div>
+                </article>
               </div>
             </div>
-            <p class="reel__note">Spec reel · Growency spec work, not commissioned by the brands shown</p>
+            <div class="client-stories__bottom"><p>Concept content · Fictional brands and founder reviews</p><span aria-hidden="true">Keep scrolling <span>↗</span></span></div>
           </div>
         </div>
 

@@ -17,9 +17,9 @@ import { WordmarkFx } from './wordmarkFx';
 
 const FOV = 30;
 const CAM_Z = 20;
-const BASE_DRIFT = 0.1; // rad/s at rest
+const BASE_DRIFT = 0.16; // rad/s at rest
 const TAU = Math.PI * 2;
-const INTRO_MS = 2600; // carousel arrival + tagline reveal on load
+const INTRO_MS = 1600; // carousel arrival + tagline reveal on load
 
 interface Els {
   hero: HTMLElement;
@@ -231,9 +231,9 @@ export class HeroScene {
     const ringCenter = new THREE.Vector3(0, (h / 2 - zoneMid) * pxToW + ringR * 0.19, 0);
 
     // The assembled mark: as large as the viewport allows under the nav.
-    const logoH = Math.min(visH * (small ? 0.46 : 0.62), (visW * (small ? 0.8 : 0.7)) / MARK_ASPECT);
-    const logoMidPx = (navH + h) / 2;
-    const logoCenter = new THREE.Vector3(0, (h / 2 - logoMidPx) * pxToW, 0);
+    const logoH = Math.min(visH * (small ? 0.35 : 0.53), (visW * (small ? 0.72 : 0.43)) / MARK_ASPECT);
+    const logoMidPx = small ? h * 0.66 : (navH + h) / 2;
+    const logoCenter = new THREE.Vector3(small ? 0 : visW * 0.235, (h / 2 - logoMidPx) * pxToW, 0);
 
     this.L = { w, h, small, visW, visH, ringCenter, ringR, cardW, cardH: cardW * 1.25, frontMin: small ? 0.7 : 0.74, frontMax, tilt0, logoCenter, logoH };
 
@@ -264,7 +264,7 @@ export class HeroScene {
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault();
         this.keyboardCard = (this.keyboardCard + (e.key === 'ArrowRight' ? 1 : -1) + this.cards.length) % this.cards.length;
-        this.spin = -this.keyboardCard / this.cards.length * TAU;
+        this.spin = -this.keyboardCard / this.cards.length * TAU - this.carouselScroll();
         this.spinVel = 0;
         canvas.setAttribute('aria-label', `${this.campaigns[this.keyboardCard].title}. Press Enter to preview; arrow keys choose another campaign.`);
       } else if (e.key === 'Enter' || e.key === ' ') {
@@ -420,8 +420,12 @@ export class HeroScene {
     });
   }
 
+  private carouselScroll() {
+    return this.p * TAU * 1.2 * (1 - smooth(seg(this.p, T.flyStart, T.flyEnd)));
+  }
+
   private angleOf(i: number) {
-    return (i / this.cards.length) * TAU + this.spin;
+    return (i / this.cards.length) * TAU + this.spin + this.carouselScroll();
   }
 
   // ── Frame ──────────────────────────────────────────────
@@ -433,7 +437,7 @@ export class HeroScene {
     this.time += dt;
 
     // Ease rendered progress toward scroll progress (works in both directions).
-    const k = 1 - Math.exp(-dt * 9);
+    const k = 1 - Math.exp(-dt * 13);
     this.p += (this.target - this.p) * k;
     if (Math.abs(this.target - this.p) < 1e-4) this.p = this.target;
     const ph = phases(this.p);
@@ -549,7 +553,7 @@ export class HeroScene {
       const i = card.index;
       // Arrival: cards are dealt around the orbit, sweeping in from wide and above.
       const ie = easeOut(clamp01((intro - (i / N) * 0.42) / 0.58));
-      const a = (i / N) * TAU + this.spin + boost - (1 - ie) * 1.6;
+      const a = (i / N) * TAU + this.spin + this.carouselScroll() + boost - (1 - ie) * 1.6;
       const front = (Math.cos(a) + 1) / 2;
       const fs = lerp(L.frontMin, lerp(L.frontMax, 1, o), smooth(front)) * lerp(0.6, 1, ie);
       const r = radius * lerp(1.9, 1, ie);
@@ -634,7 +638,7 @@ export class HeroScene {
     const N = this.cards.length;
     const st = Math.sin(tilt);
     const cardAng = this.cards.map((c) => {
-      const a = (c.index / N) * TAU + this.spin + boost;
+      const a = (c.index / N) * TAU + this.spin + this.carouselScroll() + boost;
       return { c, th: Math.atan2(-Math.cos(a) * st, Math.sin(a)) };
     }).sort((x, y) => x.th - y.th);
     const tileAng = this.tiles.map((t) => ({ t, th: Math.atan2(t.cy, t.cx) })).sort((x, y) => x.th - y.th);
@@ -710,6 +714,19 @@ export class HeroScene {
 
   private updateUi(ph: Phases) {
     const { hint, markHit } = this.els;
+    const chapters = this.els.stage.querySelectorAll<HTMLElement>('[data-hero-chapter]');
+    const starts = [T.flyEnd - 0.025, 0.785, 0.855];
+    const ends = [0.785, 0.855, T.zoomStart - 0.008];
+    chapters.forEach((chapter, i) => {
+      const enter = smooth(seg(this.p, starts[i], starts[i] + 0.018));
+      const exit = smooth(seg(this.p, ends[i] - 0.018, ends[i]));
+      const opacity = enter * (1 - exit);
+      chapter.style.opacity = String(opacity);
+      chapter.style.transform = `translateY(${(1 - enter) * 24 - exit * 18}px)`;
+      chapter.style.visibility = opacity > 0.01 ? 'visible' : 'hidden';
+      chapter.inert = opacity < 0.5;
+      chapter.setAttribute('aria-hidden', String(opacity < 0.5));
+    });
     if (hint) {
       const finished = ph.chrome > 0 && this.markFit >= 0.999;
       hint.style.opacity = String(finished ? 1 : 1 - seg(this.p, 0.005, 0.05));

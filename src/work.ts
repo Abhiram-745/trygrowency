@@ -52,52 +52,36 @@ export function initWork(motion: boolean) {
     }),
   );
 
-  // ── Reel: plays while on screen (or while the hero's window shows it) ──
-  const reel = work.querySelector<HTMLElement>('[data-reel]');
-  const video = work.querySelector<HTMLVideoElement>('[data-reel-video]');
-  if (reel && video) {
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) void video.play().catch(() => {});
-      else if (video.dataset.portal !== 'open') video.pause();
-    }).observe(reel);
+  // Scrolling carries the attached logo/review cards across the dark stage.
+  const stories = work.querySelector<HTMLElement>('[data-client-stories]');
+  const track = work.querySelector<HTMLElement>('[data-review-track]');
+  if (!stories || !track) return;
+  const viewport = track.parentElement!;
+  if (!motion) {
+    stories.classList.add('is-static');
+    return;
   }
-
-  if (!motion || !reel) return;
-  const frame = reel.querySelector<HTMLElement>('[data-reel-frame]')!;
-  const sticky = reel.querySelector<HTMLElement>('.reel__sticky')!;
-  const page = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff';
-  const shade = reel.querySelector<HTMLElement>('[data-reel-shade]')!;
-  const copy = reel.querySelector<HTMLElement>('[data-reel-copy]')!;
-  const lines = copy.querySelectorAll<HTMLElement>('.reel__line > span');
-  const rest = copy.querySelectorAll<HTMLElement>('.eyebrow, .reel__lede, .reel__actions');
-  gsap.set(lines, { yPercent: 110 });
-  gsap.set(rest, { opacity: 0, y: 24 });
-  gsap
-    .timeline({
-      scrollTrigger: {
-        trigger: reel,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.6,
-        refreshPriority: -1,
-        onUpdate: (self) => reel.classList.toggle('is-framed', self.progress > 0.8),
-      },
-      defaults: { ease: 'none' },
-    })
-    // Breathe on the full-bleed reel for a beat, then darken and rise the headline.
-    .to(video, { scale: 1.06, duration: 1 }, 0)
-    .to(shade, { opacity: 1, duration: 0.3 }, 0.12)
-    .to(copy, { opacity: 1, duration: 0.01 }, 0.12)
-    .to(lines, { yPercent: 0, duration: 0.28, stagger: 0.06, ease: 'power3.out' }, 0.14)
-    .to(rest, { opacity: 1, y: 0, duration: 0.22, stagger: 0.04, ease: 'power2.out' }, 0.3)
-    // Then the reel draws in to a framed panel before the bento.
-    .fromTo(
-      frame,
-      { clipPath: 'inset(0% 0% 0% 0% round 0px)' },
-      { clipPath: 'inset(7% 3.5% 7% 3.5% round 30px)', duration: 0.3, ease: 'power2.inOut' },
-      0.68,
-    )
-    // …and the page around it brightens to match the rest of the landing.
-    .to(sticky, { backgroundColor: page, duration: 0.3, ease: 'power2.inOut' }, 0.68);
+  const distance = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
+  gsap.to(track, {
+    x: () => -distance(),
+    ease: 'none',
+    scrollTrigger: {
+      trigger: stories,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.55,
+      invalidateOnRefresh: true,
+      refreshPriority: -1,
+    },
+  });
+  // Keyboard users can read the complete row using native horizontal scrolling.
+  viewport.addEventListener('focus', () => {
+    gsap.set(track, { clearProps: 'transform' });
+    stories.classList.add('is-keyboard');
+  });
+  viewport.addEventListener('blur', () => {
+    stories.classList.remove('is-keyboard');
+    ScrollTrigger.refresh();
+  });
   ScrollTrigger.refresh();
 }

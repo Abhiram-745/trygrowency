@@ -400,3 +400,24 @@ html.has-campaign-viewer, .has-campaign-viewer body { overflow: hidden; }
 .campaign-viewer__close { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 24px; padding: 12px 20px; border: 1px solid rgb(255 255 255 / .3); border-radius: 999px; background: rgb(255 255 255 / .12); color: #fff; font: 500 14px var(--font); cursor: pointer; backdrop-filter: blur(10px); }
 .campaign-viewer__caption { position: absolute; bottom: max(22px, env(safe-area-inset-bottom)); left: 20px; right: 20px; margin: 0; font-size: 13px; text-align: center; pointer-events: none; }
 .campaign-viewer :focus-visible { outline-color: white; }
+
+/* Editorial chapters share the stage with the turning chrome mark. */
+.hero__story { position: absolute; z-index: 4; left: max(var(--gutter), 6vw); top: 50%; width: 38%; transform: translateY(-50%); pointer-events: none; }
+.hero__chapter { position: absolute; inset: 0 0 auto; opacity: 0; visibility: hidden; pointer-events: auto; }
+.hero__story { height: 320px; }
+.hero__eyebrow { margin: 0 0 28px; font-size: 11px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-2); }
+.hero__chapter h2 { margin: 0 0 22px; font-size: clamp(36px, 4.5vw, 76px); line-height: .99; font-weight: 500; letter-spacing: -.065em; }
+.hero__chapter > p:not(.hero__eyebrow) { max-width: 360px; margin: 0; font-size: clamp(14px, 1.2vw, 17px); line-height: 1.65; color: var(--ink-2); }
+.hero__tags, .hero__process { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; font-size: 11px; }
+.hero__tags span { border: 1px solid var(--line); border-radius: 100px; padding: 7px 12px; }
+.hero__process { align-items: center; gap: 16px; text-transform: uppercase; letter-spacing: .1em; }
+.hero__process i { font-style: normal; color: #8a8a90; }
+.hero__story-link { display: inline-flex; gap: 22px; margin-top: 25px; padding-bottom: 7px; border-bottom: 1px solid var(--ink); font-size: 13px; text-decoration: none; }
+.hero:not(.is-gl) .hero__story { display: none; }
+@media (max-width: 699px) {
+  .hero__story { top: calc(var(--nav-h) + 30px); left: var(--gutter); right: var(--gutter); width: auto; height: 220px; transform: none; }
+  .hero__chapter h2 { font-size: clamp(32px, 9vw, 46px); margin-bottom: 12px; }
+  .hero__eyebrow { margin-bottom: 14px; font-size: 10px; }
+  .hero__chapter > p:not(.hero__eyebrow) { max-width: 340px; font-size: 13px; line-height: 1.5; }
+  .hero__tags, .hero__process, .hero__story-link { margin-top: 14px; }
+}
