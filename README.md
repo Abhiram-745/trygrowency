@@ -6,8 +6,8 @@ Vite + TypeScript site. The homepage hero is a scroll-scrubbed WebGL sequence
 1. **Opening:** the plain black **growency** wordmark sits above a raised, draggable orbit of campaign cards. The tagline is hidden.
 2. **Clear the stage:** the wordmark erodes completely before the tagline appears. A liquid-silver lighting reveal travels across its fixed-weight letters; there is no idle or cursor-driven weight animation.
 3. **Snap and dissolve:** the tagline holds for reading, makes a brief mechanical snap, then breaks into silver fragments as the carousel opens and assembles into the logo.
-4. **Chrome reflection:** a reflection replaces the footage with bevelled chrome while the assembled mark stays facing forward. It stays metallic. Once the shine completes, drag the bevelled 3D mark (mouse or touch) or focus it and use the arrow keys to rotate it. A soft spring settles it back before the final zoom.
-5. **Immersive finish:** the final scroll pushes into the middle facet until silver fills the viewport. The sequence spans 14 viewport heights. Navigation fades away before the immersive zoom. A short Content scroll interval leads into a white footer with a procedural 3D ASCII globe and orbiting signals. Its slow animation runs only while visible, pauses in hidden tabs, and becomes static for reduced motion.
+4. **Chrome reflection:** a reflection replaces the footage with bevelled chrome while the assembled mark stays facing forward. It stays metallic. Once the shine completes, drag the bevelled 3D mark (mouse or touch) or focus it and use the arrow keys to rotate it. The finished chrome mark makes one scroll-driven turn. Drag and keyboard input settle along the shortest arc before the zoom starts; its orientation stays fixed throughout the full-screen takeover.
+5. **Immersive finish:** the final scroll pushes into the middle facet until silver fills the viewport. The sequence spans 14 viewport heights. Navigation fades away before the immersive zoom. A short Content scroll interval leads into a white footer with a pixel-and-ASCII countryside, with subtle wind and river-light animation. Its slow animation runs only while visible, pauses in hidden tabs, and becomes static for reduced motion.
 
 ```bash
 npm install
@@ -34,6 +34,8 @@ clips should be muted 4:5 H.264 MP4 loops. The current files are generated stand
 - `src/hero/ringText.ts`: the fixed-weight tagline, liquid-metal lighting reveal and snap-to-fragments exit.
 
 ## Accessibility & performance
+
+- Lenis adds a smooth wheel glide across the page. Touch stays native, anchors are supported, and reduced motion disables smoothing.
 
 - The `<h1>` holds the real text, and the wordmark SVG is inlined at build time. WebGL hides the SVG's visuals but keeps its layout.
 - `prefers-reduced-motion`, or no WebGL2: no pin and no three.js download. You get the static wordmark plus the mark filled with posters.

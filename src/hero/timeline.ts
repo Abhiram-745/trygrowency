@@ -24,7 +24,9 @@ export const T = {
   chromeStart: 0.70,
   // 4. Slow, front-facing chrome reveal.
   chromeEnd: 0.88,
-  // Hold the finished 3D mark for drag / keyboard rotation, then zoom in.
+  // One turn, a separate settle interval, then a rotation-free zoom.
+  turnEnd: 0.915,
+  settleEnd: 0.928,
   zoomStart: 0.93,
   zoomEnd: 0.995,
 };

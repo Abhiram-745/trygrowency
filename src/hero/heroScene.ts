@@ -407,8 +407,18 @@ export class HeroScene {
     // Keep the media-filled mark facing forward throughout the reveal.
     // Only the studio reflection travels; the cards never turn edge-on.
     const scale = logoH * Math.exp(zoom * Math.log(75));
-    const restTilt = smooth(seg(this.p, T.chromeEnd, T.chromeEnd + 0.012)) * (1 - zoom);
-    this.logo.rotation.set(0.04 * restTilt + this.rotX * (1 - zoom), -0.08 * restTilt + this.rotY * (1 - zoom), 0);
+    const turn = smooth(seg(this.p, T.chromeEnd, T.turnEnd));
+    const settle = smooth(seg(this.p, T.turnEnd, T.settleEnd));
+    // Settle along the shortest arc BEFORE scaling. Multiplying a multi-turn
+    // drag angle by zoom progress would unwind it through the entire close-up.
+    const dragY = Math.atan2(Math.sin(this.rotY), Math.cos(this.rotY));
+    const inputY = settle > 0 ? dragY : this.rotY;
+    const restTilt = Math.sin(turn * Math.PI) * 0.12;
+    this.logo.rotation.set((restTilt + this.rotX) * (1 - settle), TAU * turn + inputY * (1 - settle), 0);
+    if (this.p >= T.settleEnd) {
+      this.rotX = this.rotY = this.rotVelX = this.rotVelY = 0;
+      this.logoDragging = false;
+    }
     this.logo.scale.setScalar(scale);
     // Aim at the interior of the middle facet, avoiding the gaps between blades.
     const focus = new THREE.Vector3(-0.22, 0, 0).applyEuler(this.logo.rotation);
@@ -600,13 +610,13 @@ export class HeroScene {
   private updateUi(ph: Phases) {
     const { hint, markHit } = this.els;
     if (hint) {
-      const finished = ph.chrome >= 1 && ph.zoom < 0.01;
+      const finished = ph.chrome >= 1 && this.p < T.turnEnd;
       hint.style.opacity = String(finished ? 1 : 1 - seg(this.p, 0.005, 0.05));
       const dragHint = hint.querySelector<HTMLElement>('.hero__hint-drag');
       if (dragHint) dragHint.textContent = finished ? 'Drag to rotate · Arrow keys to spin' : 'Drag to explore';
     }
     // The mark can be hovered/grabbed once the chrome reveal has finished sweeping.
-    const active = ph.chrome >= 1 && ph.zoom < 0.01;
+    const active = ph.chrome >= 1 && this.p < T.turnEnd;
     this.markActive = active;
     if (active !== markHit.classList.contains('is-active')) {
       markHit.classList.toggle('is-active', active);

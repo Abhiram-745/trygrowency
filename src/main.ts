@@ -1,4 +1,5 @@
 import './styles.css';
+import 'lenis/dist/lenis.css';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CAMPAIGNS } from './content/campaigns';
@@ -18,6 +19,36 @@ buildStaticMark($<SVGSVGElement>('[data-static-mark]'), CAMPAIGNS);
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const forceStatic = new URLSearchParams(location.search).has('static');
+
+// Glide wheel scrolling throughout the page while leaving touch and
+// reduced-motion scrolling native. Keep ScrollTrigger tied to actual scroll.
+void import('lenis').then(({ default: Lenis }) => {
+  const preference = matchMedia('(prefers-reduced-motion: reduce)');
+  let scrolling: InstanceType<typeof Lenis> | undefined;
+  const sync = () => {
+    scrolling?.destroy();
+    scrolling = undefined;
+    if (preference.matches) return;
+    scrolling = new Lenis({ autoRaf: true, duration: 1.05, lerp: 0, smoothWheel: true, syncTouch: false, anchors: false });
+    scrolling.on('scroll', ScrollTrigger.update);
+  };
+  document.addEventListener('click', (event) => {
+    if (!scrolling || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = (event.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+    const hash = link?.getAttribute('href');
+    if (!hash || hash === '#') return;
+    const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (!target) return;
+    event.preventDefault();
+    // Numeric destinations stay accurate after keyboard focus or native
+    // scroll-into-view moves, even before Lenis sees the next scroll event.
+    const top = hash === '#hero' ? 0 : target.getBoundingClientRect().top + window.scrollY;
+    history.pushState(null, '', hash);
+    scrolling.scrollTo(top);
+  });
+  preference.addEventListener('change', sync);
+  sync();
+});
 
 function webglAvailable() {
   try {
@@ -87,7 +118,7 @@ async function initMotion() {
   (window as unknown as { __hero: unknown }).__hero = { scene, st };
 }
 
-// Load the ASCII globe only as the footer approaches.
+// Load the ASCII countryside only as the footer approaches.
 const footer = document.querySelector<HTMLElement>('.world-footer');
 if (footer) {
   const observer = new IntersectionObserver(([entry]) => {
