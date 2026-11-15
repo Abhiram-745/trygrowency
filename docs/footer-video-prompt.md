@@ -1,18 +1,35 @@
 # Growency footer: image-to-video loop
 
-Use the matching desktop or mobile image as the input image / first-frame reference. Generate each format separately so the cottage and river retain their intended composition. The website currently shows the responsive stills; no AI video has been generated yet.
+Use the matching desktop or mobile image as the input image / first-frame reference. Generate each format separately so the cottage and river retain their intended composition. The website currently shows the responsive stills; no AI video has been generated yet. Generate the desktop and phone versions separately.
 
 ## Copy-and-paste prompt
 
-Create an eight-second seamless looping living illustration using the supplied image as a strict visual reference. Preserve the exact composition, cottage architecture, fence geometry, river course, field boundaries, painterly print texture, warm ivory sky, olive greens and golden afternoon light. The camera is completely locked: no pan, tilt, zoom, dolly, crop, parallax or perspective change.
+Use the footer image as BOTH the start frame and the end frame.
 
-The countryside is almost still. Add only tiny, natural cyclic movements: a soft breeze gently sways a few foreground grass tips and leaves; very small ripples carry delicate sunlight glints across the existing river; the distant valley mist softly breathes without visibly drifting out of place. Motion should be noticeable only after watching quietly for a moment. Keep the cottage, fence, hills and tree trunks perfectly stationary. Preserve the empty light sky for website text. Maintain constant exposure, colour balance and sun position.
-
-All animated details return naturally to their starting positions by the final frame, with matching motion direction and speed at the loop seam. Make the first and last frames visually identical, without a pause, dissolve or sudden reversal. Keep the movement elegant, slow and understated. No sound, no text, no logos.
+> Locked-off tripod shot of this exact painting. The camera does not move at all: the horizon, the hills, the cottage and the fence stay at exactly the same place on screen in every frame. No tilt down, no pan, no zoom, no push-in, no crane.
+>
+> Bring the whole landscape gently to life, far and near at the same time:
+> - Far hills: soft valley mist drifts slowly to the right between the hills, thinning and gathering.
+> - Middle distance: a light breeze sends slow waves rolling across the golden wheat fields and green meadows.
+> - River: the water flows steadily from the far bend toward the lower right, with small sun glints travelling along it.
+> - Trees: the big oak on the left and the trees across the valley sway softly, leaves rustling and catching the light.
+> - Cottage: a thin wisp of pale smoke rises from the chimney and drifts right.
+> - Foreground: the long grass and white cow parsley along the fence nod in the breeze.
+> - Sky: stays clear warm ivory with a faint shimmer of warm haze.
+>
+> Same golden late-afternoon light throughout. Everything moves slowly and calmly at one gentle pace and returns to the starting image, so the last frame matches the first for a seamless loop. Keep the soft painterly illustration style exactly as in the image.
 
 ## Negative prompt
 
-Camera movement, zoom, orbit, parallax, handheld shake, frame drift, scene cuts, changing weather, changing time of day, dramatic clouds, moving sun, flicker, pulsing exposure, boiling textures, morphing buildings, bending fences, melted foliage, added people, animals, birds, vehicles, smoke, new objects, strong wind, exaggerated water, ASCII, pixelation, subtitles, watermark, audio.
+Camera movement, tilt, pan, pan down, crane, dolly, zoom, push in, parallax, horizon moving, shaking, cropping, reframing, scene cut, time-lapse, changing light, moving sun, flicker, fast motion, strong wind, morphing cottage, bending fence, melting trees, new objects, people, animals, birds, vehicles, text, logo, watermark.
+
+## Generator settings (why the camera kept sinking)
+
+- **Camera control: static / none / locked.** Most tools default to a gentle move; with a big empty sky they often choose a tilt down. Turn it off explicitly.
+- **Same image as first and last frame.** This forces the view to come back to where it started, so it can't drift.
+- **Motion strength: medium, not low.** Low settings mostly animate the nearest plants, which is why only the front was moving.
+- **Motion brush, if available (Kling, Runway):** paint the river (downstream), fields (left to right), mist (right), smoke (up), oak (sway); mark the hills, cottage and fence as static.
+- If it still drifts, generate a 5 s clip instead of 8–10 s; shorter clips drift less.
 
 ## Desktop version
 
