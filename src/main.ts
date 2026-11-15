@@ -118,14 +118,14 @@ async function initMotion() {
   (window as unknown as { __hero: unknown }).__hero = { scene, st };
 }
 
-// Load the ASCII countryside only as the footer approaches.
+// Optional loop video loads only as the footer approaches.
 const footer = document.querySelector<HTMLElement>('.world-footer');
 if (footer) {
   const observer = new IntersectionObserver(([entry]) => {
     if (!entry.isIntersecting) return;
     observer.disconnect();
-    import('./footerTexture').then(({ initFooterTexture }) => initFooterTexture(footer)).catch(() => {
-      // Footer navigation and typography remain available without canvas.
+    import('./footerMedia').then(({ initFooterVideo }) => initFooterVideo(footer)).catch(() => {
+      // Responsive still images remain available if video cannot play.
     });
   }, { rootMargin: '300px' });
   observer.observe(footer);
