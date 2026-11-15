@@ -238,6 +238,7 @@ h3 {
   -webkit-tap-highlight-color: transparent;
 }
 .hero__mark-hit.is-active {
+  touch-action: none;
   display: block;
 }
 

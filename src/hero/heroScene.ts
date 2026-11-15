@@ -258,6 +258,8 @@ export class HeroScene {
       this.lastT = performance.now();
       // Finished mark: grab to rotate.
       if (this.markActive && e.target === markHit) {
+        e.preventDefault();
+        markHit.setPointerCapture(e.pointerId);
         this.logoDragging = true;
         this.logoMoved = 0;
         this.rotVelX = this.rotVelY = 0;
@@ -405,7 +407,8 @@ export class HeroScene {
     // Keep the media-filled mark facing forward throughout the reveal.
     // Only the studio reflection travels; the cards never turn edge-on.
     const scale = logoH * Math.exp(zoom * Math.log(75));
-    this.logo.rotation.set(this.rotX * (1 - zoom), this.rotY * (1 - zoom), 0);
+    const restTilt = smooth(seg(this.p, T.chromeEnd, T.chromeEnd + 0.012)) * (1 - zoom);
+    this.logo.rotation.set(0.04 * restTilt + this.rotX * (1 - zoom), -0.08 * restTilt + this.rotY * (1 - zoom), 0);
     this.logo.scale.setScalar(scale);
     // Aim at the interior of the middle facet, avoiding the gaps between blades.
     const focus = new THREE.Vector3(-0.22, 0, 0).applyEuler(this.logo.rotation);
@@ -596,7 +599,12 @@ export class HeroScene {
 
   private updateUi(ph: Phases) {
     const { hint, markHit } = this.els;
-    if (hint) hint.style.opacity = String(1 - seg(this.p, 0.005, 0.05));
+    if (hint) {
+      const finished = ph.chrome >= 1 && ph.zoom < 0.01;
+      hint.style.opacity = String(finished ? 1 : 1 - seg(this.p, 0.005, 0.05));
+      const dragHint = hint.querySelector<HTMLElement>('.hero__hint-drag');
+      if (dragHint) dragHint.textContent = finished ? 'Drag to rotate · Arrow keys to spin' : 'Drag to explore';
+    }
     // The mark can be hovered/grabbed once the chrome reveal has finished sweeping.
     const active = ph.chrome >= 1 && ph.zoom < 0.01;
     this.markActive = active;
@@ -605,6 +613,7 @@ export class HeroScene {
       markHit.tabIndex = active ? 0 : -1;
       if (!active) {
         this.logoDragging = false;
+        this.els.hero.classList.remove('is-dragging');
         if (this.hover.v > 0) {
           this.hoverLocked = false;
           gsap.to(this.hover, { v: 0, duration: 0.4, overwrite: true });
