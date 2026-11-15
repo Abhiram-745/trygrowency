@@ -493,6 +493,9 @@ export class HeroScene {
     const glint = lerp(-0.4, 1.5, smooth(seg(c, 0.30, 1)));
     const depth = easeOut(seg(c, 0.05, 0.65));
     this.chrome.update(sweep, glint, depth, 0, this.hover.v);
+    // As the push-in magnifies the reflections into blurry bands, flatten the
+    // surface to one constant colour so the zoom lands cleanly.
+    this.chrome.setFill(smooth(seg(ph.zoom, 0.28, 0.72)));
   }
 
   private updateCards(ph: Phases, intro: number, dt: number) {

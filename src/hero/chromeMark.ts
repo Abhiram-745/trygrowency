@@ -5,6 +5,12 @@ import * as THREE from 'three';
 import { MARK_ASPECT, MARK_FACETS_UNIT } from '../brand/mark';
 import { NOISE, SWEEP } from './glsl';
 
+/**
+ * Colour the chrome surface settles to as the camera pushes into it. White
+ * matches the page, so the zoom passes through the mark into what follows.
+ */
+export const ZOOM_FILL = '#ffffff';
+
 const DEPTH = 0.075; // in mark heights
 const BEVEL_T = 0.016;
 const BEVEL_S = 0.0105;
@@ -17,6 +23,8 @@ export class ChromeMark {
     uGlint: { value: -1 },
     uWhite: { value: 0 },
     uHover: { value: 0 },
+    uFill: { value: 0 },
+    uFillCol: { value: new THREE.Color(ZOOM_FILL) },
     uAspect: { value: MARK_ASPECT },
   };
   private halo: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
@@ -45,7 +53,8 @@ export class ChromeMark {
           '#include <common>',
           `#include <common>
           varying vec3 vMarkPos;
-          uniform float uSweep, uGlint, uWhite, uHover;
+          uniform float uSweep, uGlint, uWhite, uHover, uFill;
+          uniform vec3 uFillCol;
           ${NOISE}
           ${SWEEP}`,
         )
@@ -70,7 +79,9 @@ export class ChromeMark {
           float edge = 1.0 - smoothstep(0.80, 0.995, facing);
           float edgeShade = mix(0.07, 0.26, uHover);
           vec3 whiteCol = vec3(1.0) - edge * edgeShade * vec3(1.0, 0.99, 0.975);
-          gl_FragColor.rgb = mix(gl_FragColor.rgb, whiteCol, uWhite);`,
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, whiteCol, uWhite);
+          // final zoom: the surface flattens to one constant colour (no stretched reflections)
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, linearToOutputTexel(vec4(uFillCol, 1.0)).rgb, uFill);`,
         );
     };
 
@@ -105,6 +116,11 @@ export class ChromeMark {
    * @param white 0..1 chrome → flat white
    * @param hover 0..1 halo bloom
    */
+  /** 0..1: how far the surface has flattened to ZOOM_FILL during the final zoom. */
+  setFill(amount: number) {
+    this.u.uFill.value = amount;
+  }
+
   update(sweep: number, glint: number, depth: number, white: number, hover: number) {
     this.u.uSweep.value = sweep;
     this.u.uGlint.value = glint;
