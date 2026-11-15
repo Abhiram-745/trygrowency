@@ -87,14 +87,14 @@ async function initMotion() {
   (window as unknown as { __hero: unknown }).__hero = { scene, st };
 }
 
-// Load the decorative ASCII texture only as the landscape approaches.
-const footer = document.querySelector<HTMLElement>('.landscape-footer');
+// Load the ASCII globe only as the footer approaches.
+const footer = document.querySelector<HTMLElement>('.world-footer');
 if (footer) {
   const observer = new IntersectionObserver(([entry]) => {
     if (!entry.isIntersecting) return;
     observer.disconnect();
     import('./footerTexture').then(({ initFooterTexture }) => initFooterTexture(footer)).catch(() => {
-      // The landscape remains complete if canvas or image decoding is unavailable.
+      // Footer navigation and typography remain available without canvas.
     });
   }, { rootMargin: '300px' });
   observer.observe(footer);
